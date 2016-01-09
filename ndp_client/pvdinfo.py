@@ -1,3 +1,7 @@
+# this file is a copy from:
+# https://github.com/dskvorc/mif-pvdman
+
+
 # https://tools.ietf.org/html/rfc4861
 class MTUInfo:
   def __init__(self, mtu):

@@ -1,11 +1,11 @@
+# simple NDP client that reads NDP messages
+# - emphasis is on processing PVD_CO options
+
 # formated with tab=4 spaces long (not replaced with spaces)
 
 import socket, select, struct, sys, binascii
 import pyroute2, ipaddress
 import pvdinfo
-
-ROUTER_SOLICITATION = 133
-ROUTER_ADVERTISEMENT = 134
 
 class NDPClient:
 	def __init__ ( self, iface = None, lla = None ):
@@ -31,8 +31,10 @@ class NDPClient:
 		if not msg:
 			return None
 		else:
-			# create PvdInfo struct TODO
-			# ? have pvd container in message?
+			# create PvdInfo structs from received RA
+			pvdinfos = []
+
+			# Do we have PVD_CO option?
 			for opt in msg.options:
 				if opt['type'] == NdpMsg.OPT_PVD_CO:
 					pvdId = None
@@ -49,23 +51,39 @@ class NDPClient:
 								# error, already have pvdId
 								return None
 							else:
-								pvdId = pvd_opt['pvd_id']
+								pvdId = pvd_opt['pvdId']
+
+						elif pvd_opt['type'] == NdpMsg.OPT_MTU:
+							mtu = pvd_opt['MTUInfo']
 
 						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
 							prefixes.append ( pvd_opt['PrefixInfo'] )
 
-						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
-							prefixes.append ( pvd_opt['PrefixInfo'] )
+						elif pvd_opt['type'] == NdpMsg.OPT_ROUTE:
+							routes.append ( pvd_opt['RouteInfo'] )
 
-						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
-							prefixes.append ( pvd_opt['PrefixInfo'] )
+						elif pvd_opt['type'] == NdpMsg.OPT_RDNSS:
+							rdnsses.append ( pvd_opt['RDNSSInfo'] )
 
-						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
-							prefixes.append ( pvd_opt['PrefixInfo'] )
+						elif pvd_opt['type'] == NdpMsg.OPT_DNSSL:
+							dnssls.append ( pvd_opt['DNSSLInfo'] )
 
-			return pvdinfo.PvdInfo ( pvdId, mtu, prefixes, routes, rdnsses, dnssls, lowpancontexts, abros )
+						# Not implemented:
+						# elif pvd_opt['type'] == NdpMsg.OPT_LoWPANContext:
+						#	lowpancontexts.append ( pvd_opt['LoWPANContextInfo'] )
+						# elif pvd_opt['type'] == NdpMsg.OPT_ABRO:
+						#	abros.append ( pvd_opt['ABROInfo'] )
 
-	def send_rs ( self, pvd_id = None, iface = None, src = None, dest = None ):
+					pvdinfos.append ( pvdinfo.PvdInfo ( pvdId, mtu, prefixes, routes, rdnsses, dnssls, lowpancontexts, abros ) )
+
+			if not pvdinfos:
+				# create implicit pvd info?
+				# pvdId = "implicit"
+				pass
+
+			return pvdinfos
+
+	def send_rs ( self, pvdId = None, iface = None, src = None, dest = None ):
 		'''Send Router-Solicitation message'''
 		_iface = iface or self.iface
 		if not _iface:
@@ -85,7 +103,7 @@ class NDPClient:
 			if not _src:
 				raise Exception('Source address must be provided!')
 
-		msg = NdpMsg.create_rs ( src = _src, dest = dest, pvd_id = pvd_id, iface = _iface )
+		msg = NdpMsg.create_rs ( src = _src, dest = dest, pvdId = pvdId, iface = _iface )
 		addr = ( msg.dest, 0, 0, socket.if_nametoindex(_iface) )
 		self.__sock.sendto ( msg.packet, addr )
 		return msg
@@ -110,7 +128,9 @@ class NDPClient:
 		iface = socket.if_indextoname(iface_id)
 		return NdpMsg.from_packet ( packet, src, dest, iface )
 
-class NdpMsg:
+# NDP message handling
+class NdpMsg: # rfc4861
+	ALL_ROUTERS = "ff02::2"
 	TYPE_RS = 133
 	TYPE_RA = 134
 	OPT_SRC_LLA = 1
@@ -118,9 +138,13 @@ class NdpMsg:
 	OPT_PREFIX = 3
 	OPT_REDIRECT = 4
 	OPT_MTU = 5
-	OPT_PVD_CO = 63
-	OPT_PVD_ID = 31
-	ALL_ROUTERS = "ff02::2"
+	OPT_PVD_CO = 63        # (TBD) draft-ietf-mif-mpvd-ndp-support-02
+	OPT_PVD_ID = 64        # (TBD) draft-ietf-mif-mpvd-ndp-support-02
+	OPT_ROUTE = 24         # rfc4191
+	OPT_RDNSS = 25         # rfc6106
+	OPT_DNSSL = 31         # rfc6106
+	OPT_LoWPANContext = 34 # rfc6775 (not implemented)
+	OPT_ABRO = 35          # rfc6775 (not implemented)
 
 	def __init__ ( self, src = None, dest = None, iface = None ):
 		self.src = src
@@ -181,7 +205,7 @@ class NdpMsg:
 			elif opt['type'] == NdpMsg.OPT_REDIRECT:
 				pass # don't process this option (for now)
 			elif opt['type'] == NdpMsg.OPT_MTU:
-				opt['mtu'] = struct.unpack("!I", opt['data'][2:6])
+				opt['MTUInfo'] = MTUInfo ( struct.unpack("!I", opt['data'][2:6]) )
 			elif opt['type'] == NdpMsg.OPT_PVD_CO:
 				opt['S'] = ( (opt['data'][0] & 0x80 ) != 0 )
 				opt['Name_Type'] = opt['data'][1]
@@ -195,42 +219,71 @@ class NdpMsg:
 				opt['options'] = []
 				self.__unpack_options ( opt['options'], container )
 			elif opt['type'] == NdpMsg.OPT_PVD_ID:
-				opt['pvd_id'] = (opt['data'][2:]).decode("utf-8")
+				opt['pvdId'] = (opt['data'][2:]).decode("utf-8")
+			elif opt['type'] == NdpMsg.OPT_ROUTE:
+				opt['RouteInfo'] = pvdinfo.RouteInfo (
+					opt['data'][0], #prefixLength
+					( opt['data'][1] >> 3 ) & 0x3, # routePreference
+					struct.unpack("!I", opt['data'][2:6])[0], # routeLifetime
+					socket.inet_ntop ( socket.AF_INET6, opt['data'][6:]) # prefix
+				)
+			elif opt['type'] == NdpMsg.OPT_RDNSS:
+				lifetime = struct.unpack("!I", opt['data'][2:6])[0]
+				addresses = []
+				addr = opt['data'][6:]
+				while addr:
+					addresses.append ( socket.inet_ntop ( socket.AF_INET6, addr[:16] ) )
+					addr = addr[16:]
+				opt['RDNSSInfo'] = pvdinfo.RDNSSInfo ( lifetime, addresses )
+			elif opt['type'] == NdpMsg.OPT_DNSSL:
+				lifetime = struct.unpack("!I", opt['data'][2:6])[0]
+				domains = []
+				d = opt['data'][6:]
+				while d and d[0] > 0:
+					domain = d[1:d[0]+1].decode('utf-8')
+					d = d[d[0]+1:]
+					while d and d[0] != 0:
+						domain += "." + d[1:d[0]+1].decode('utf-8')
+						d = d[d[0]+1:]
+					domains.append ( domain )
+					if d and d[0] == 0:
+						d = d[1:]
+				opt['DNSSLInfo'] = pvdinfo.DNSSLInfo ( lifetime, domains )
 			else:
 				#don't process unknown options
 				pass
 			save_to.append(opt)
 
 	@classmethod
-	def create_rs ( cls, src, dest = None, pvd_id = None, iface = None ):
+	def create_rs ( cls, src, dest = None, pvdId = None, iface = None ):
 		dest = dest or NdpMsg.ALL_ROUTERS
 		if not src or not dest: # required for checksum
 			return None
 		msg = cls ( src, dest, iface )
-		msg.pvd_id = pvd_id
+		msg.pvdId = pvdId
 		msg.Type = NdpMsg.TYPE_RS
 		msg.Code = 0
 
 		msg.packet = struct.pack ( "BBHI", msg.Type, msg.Code, 0, 0 )
-		if pvd_id:
-			if isinstance ( pvd_id, list ): pvds = pvd_id
-			else: 	pvds = [pvd_id]
+		if pvdId:
+			if isinstance ( pvdId, list ): pvds = pvdId
+			else: 	pvds = [pvdId]
 			for pvd in pvds:
 				# TODO update if pvd can be something other than uuid
-				pvd_id_type = 1
-				pvd_id_uuid = bytes ( pvd, 'utf-8' )
-				pvd_id_len = len(pvd_id_uuid)
+				pvdId_type = 1
+				pvdId_uuid = bytes ( pvd, 'utf-8' )
+				pvdId_len = len(pvdId_uuid)
 
-				pvd_id_opt = struct.pack("BB", pvd_id_type, pvd_id_len )
-				pvd_id_opt += pvd_id_uuid
-				opt_len = 2 + ( 2 + pvd_id_len )
+				pvdId_opt = struct.pack("BB", pvdId_type, pvdId_len )
+				pvdId_opt += pvdId_uuid
+				opt_len = 2 + ( 2 + pvdId_len )
 				pad_len = ((opt_len+7)//8)*8 - opt_len
-				pvd_id_opt += (b'\0')*pad_len
-				opt_len = (2 + ( 2 + len(pvd_id_opt) ))//8
+				pvdId_opt += (b'\0')*pad_len
+				opt_len = (2 + ( 2 + len(pvdId_opt) ))//8
 
 				msg.packet += struct.pack("BB", NdpMsg.OPT_PVD_ID, opt_len )
-				msg.packet += pvd_id_opt
-				msg.options.append ( { 'type':NdpMsg.OPT_PVD_ID, 'len':opt_len, 'data':pvd_id_opt, 'pvd_id':pvd } )
+				msg.packet += pvdId_opt
+				msg.options.append ( { 'type':NdpMsg.OPT_PVD_ID, 'len':opt_len, 'data':pvdId_opt, 'pvdId':pvd } )
 
 		chks = msg.__checksum ( msg.src, msg.dest, len(msg.packet), 58, msg.packet )
 		msg.packet = msg.packet[0:2] + struct.pack ( "!H", chks ) + msg.packet[4:]
@@ -274,7 +327,7 @@ class NdpMsg:
 		for opt in options:
 			s += "\n\toption: "
 			if opt['type'] == NdpMsg.OPT_PVD_ID:
-				s += "OPT_PVD_ID " + str(opt['pvd_id']) + "\n"
+				s += "OPT_PVD_ID " + str(opt['pvdId']) + "\n"
 			elif opt['type'] == NdpMsg.OPT_SRC_LLA:
 				s += "Source Link-layer Address:" + "\n\t\t"
 				s += binascii.hexlify ( opt['data'] ).decode('utf-8')
@@ -283,16 +336,32 @@ class NdpMsg:
 				s += binascii.hexlify ( opt['data'] ).decode('utf-8')
 			elif opt['type'] == NdpMsg.OPT_PREFIX:
 				s += "OPT_PREFIX " + "\n\t\t"
-				s += "prefix_len:" + str(opt['PrefixInfo'].prefixLength) + "\n\t\t"
-				s += "L:" + str(opt['PrefixInfo'].onLink) + "\n\t\t"
-				s += "A:" + str(opt['PrefixInfo'].autoAddressConfig) + "\n\t\t"
-				s += "valid_lifetime:" + str(opt['PrefixInfo'].validLifetime) + "\n\t\t"
-				s += "preferred_lifetime:" + str(opt['PrefixInfo'].preferredLifetime) + "\n\t\t"
+				s += "prefixLength:" + str(opt['PrefixInfo'].prefixLength) + "\n\t\t"
+				s += "onLink:" + str(opt['PrefixInfo'].onLink) + "\n\t\t"
+				s += "autoAddressConfig:" + str(opt['PrefixInfo'].autoAddressConfig) + "\n\t\t"
+				s += "validLifetime:" + str(opt['PrefixInfo'].validLifetime) + "\n\t\t"
+				s += "preferredLifetime:" + str(opt['PrefixInfo'].preferredLifetime) + "\n\t\t"
 				s += "prefix:" + str(opt['PrefixInfo'].prefix) + "\n"
+			elif opt['type'] == NdpMsg.OPT_MTU:
+				s += "OPT_MTU " + str(opt['MTUInfo'].mtu)
 			elif opt['type'] == NdpMsg.OPT_PVD_CO:
 				s += "OPT_PVD_CO start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>" + "\n\t\t"
 				s += self.__dump_options ( opt['options'] )
 				s += "\n\toption: OPT_PVD_CO end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<" + "\n"
+			elif opt['type'] == NdpMsg.OPT_ROUTE:
+				s += "OPT_ROUTE " + "\n\t\t"
+				s += "prefixLength:" + str(opt['RouteInfo'].prefixLength) + "\n\t\t"
+				s += "routePreference:" + str(opt['RouteInfo'].routePreference) + "\n\t\t"
+				s += "preferred_lifetime:" + str(opt['RouteInfo'].routeLifetime) + "\n\t\t"
+				s += "prefix:" + str(opt['RouteInfo'].prefix) + "\n"
+			elif opt['type'] == NdpMsg.OPT_RDNSS:
+				s += "OPT_RDNSS " + "\n\t\t"
+				s += "lifetime:" + str(opt['RDNSSInfo'].lifetime) + "\n\t\t"
+				s += "addresses:" + str(opt['RDNSSInfo'].addresses) + "\n"
+			elif opt['type'] == NdpMsg.OPT_DNSSL:
+				s += "OPT_DNSSL " + "\n\t\t"
+				s += "lifetime:" + str(opt['DNSSLInfo'].lifetime) + "\n\t\t"
+				s += "domainNames:" + str(opt['DNSSLInfo'].domainNames) + "\n"
 			else:
 				s += "(raw) " + str(opt['type']) +" " + str(opt['len']) + " "
 				s += binascii.hexlify ( opt['data'] ).decode('utf-8') #str(opt['data'])
@@ -311,14 +380,15 @@ else:
 	uuid = None
 
 if iface:
-	sent = ndpc.send_rs ( pvd_id = uuid, iface = iface )
+	sent = ndpc.send_rs ( pvdId = uuid, iface = iface )
 	print("\nSent:")
 	print(sent.dump())
 
-received = ndpc.get_pvdinfo ( timeout=30 )
+#received = ndpc.get_pvdinfo ( timeout=30 )
+received = ndpc.recvmsg ( timeout=30 )
 if received:
 	print("\nReceived:")
-#	print(received.dump())
+	print(received.dump())
 
 
 # listen for first ndp packet:
