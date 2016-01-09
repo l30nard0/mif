@@ -1,3 +1,6 @@
+# simple NDP client that reads NDP messages
+# - emphasis is on processing PVD_CO options
+
 # formated with tab=4 spaces long (not replaced with spaces)
 
 import socket, select, struct, sys, binascii
@@ -125,6 +128,7 @@ class NDPClient:
 		iface = socket.if_indextoname(iface_id)
 		return NdpMsg.from_packet ( packet, src, dest, iface )
 
+# NDP message handling
 class NdpMsg: # rfc4861
 	ALL_ROUTERS = "ff02::2"
 	TYPE_RS = 133
@@ -134,11 +138,11 @@ class NdpMsg: # rfc4861
 	OPT_PREFIX = 3
 	OPT_REDIRECT = 4
 	OPT_MTU = 5
-	OPT_PVD_CO = 63 # draft-ietf-mif-mpvd-ndp-support-02
-	OPT_PVD_ID = 64 # draft-ietf-mif-mpvd-ndp-support-02
-	OPT_ROUTE = 24 # rfc4191
-	OPT_RDNSS = 25 # rfc6106
-	OPT_DNSSL = 31 # rfc6106
+	OPT_PVD_CO = 63        # (TBD) draft-ietf-mif-mpvd-ndp-support-02
+	OPT_PVD_ID = 64        # (TBD) draft-ietf-mif-mpvd-ndp-support-02
+	OPT_ROUTE = 24         # rfc4191
+	OPT_RDNSS = 25         # rfc6106
+	OPT_DNSSL = 31         # rfc6106
 	OPT_LoWPANContext = 34 # rfc6775 (not implemented)
 	OPT_ABRO = 35          # rfc6775 (not implemented)
 
