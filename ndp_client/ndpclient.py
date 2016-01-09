@@ -46,12 +46,22 @@ class NDPClient:
 					for pvd_opt in opt['options']:
 						if pvd_opt['type'] == NdpMsg.OPT_PVD_ID:
 							if pvdId:
-								# error, have already pvdId
+								# error, already have pvdId
 								return None
 							else:
 								pvdId = pvd_opt['pvd_id']
+
 						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
-							prefixes.append(pvd_opt['PrefixInfo'])
+							prefixes.append ( pvd_opt['PrefixInfo'] )
+
+						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
+							prefixes.append ( pvd_opt['PrefixInfo'] )
+
+						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
+							prefixes.append ( pvd_opt['PrefixInfo'] )
+
+						elif pvd_opt['type'] == NdpMsg.OPT_PREFIX:
+							prefixes.append ( pvd_opt['PrefixInfo'] )
 
 			return pvdinfo.PvdInfo ( pvdId, mtu, prefixes, routes, rdnsses, dnssls, lowpancontexts, abros )
 
