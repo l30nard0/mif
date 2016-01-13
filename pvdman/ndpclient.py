@@ -89,6 +89,7 @@ class NDPClient:
 		'''Send Router-Solicitation message'''
 		_iface = iface or self.iface
 		if not _iface:
+			# error, or should RS be sent to all interfaces by default?
 			raise Exception('Interface must be provided!')
 		_src = src or self.__lla
 		if not _src:

@@ -26,10 +26,11 @@ def sock_received ( fd, cond, src_socket ):
 
 class MyDBUSService(dbus.service.Object):
     def __init__(self):
-        bus_name = dbus.service.BusName('org.net.pvdman', bus=dbus.SessionBus())
-        dbus.service.Object.__init__(self, bus_name, '/org/net/pvdman')
+		# using session bus
+        bus_name = dbus.service.BusName('org.freedesktop.PvDManager', bus=dbus.SessionBus())
+        dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/PvDManager')
 
-    @dbus.service.method('org.net.pvdman')
+    @dbus.service.method('org.freedesktop.PvDManager')
     def ping(self):
         print ( "Got request!" )
         return "Hello from pvdman"

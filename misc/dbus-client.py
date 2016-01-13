@@ -3,11 +3,19 @@
 import dbus
 import socket
 
-# dbus
+# dbus example, for companion dbus-service.py
 bus = dbus.SessionBus()
-helloservice = bus.get_object('org.net.pvdman', '/org/net/pvdman')
-ping = helloservice.get_dbus_method('ping', 'org.net.pvdman')
+helloservice = bus.get_object('org.freedesktop.PvDManager', '/org/freedesktop/PvDManager')
+ping = helloservice.get_dbus_method('ping', 'org.freedesktop.PvDManager')
 print (ping())
+
+# dbus example, for pvdman example
+"""
+bus = dbus.SystemBus()
+pvdApiClient = bus.get_object('org.freedesktop.PvDManager', '/org/freedesktop/PvDManager')
+getAllPvDs = pvdApiClient.get_dbus_method('getAllPvDs', 'org.freedesktop.PvDManager')
+print ( str(getAllPvDs()) )
+"""
 
 # socket
 PROTO = socket.AF_INET6
