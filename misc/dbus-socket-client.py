@@ -1,13 +1,13 @@
-# client
+# client (dbus+socket)
 
 import dbus
 import socket
 
-# dbus example, for companion dbus-service.py
+# dbus example, for companion dbus-socket-service.py
 bus = dbus.SessionBus()
 helloservice = bus.get_object('org.freedesktop.PvDManager', '/org/freedesktop/PvDManager')
 ping = helloservice.get_dbus_method('ping', 'org.freedesktop.PvDManager')
-print (ping())
+print (ping("123"))
 
 # dbus example, for pvdman example
 """

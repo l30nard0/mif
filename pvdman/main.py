@@ -18,9 +18,10 @@ class PvdApiServer ( dbus.service.Object ):
 		dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/PvDManager')
 
 	@dbus.service.method('org.freedesktop.PvDManager')
-	def getAllPvDs(self):
-		print ( "Got request!" )
-		return ["Hello", "from", "PvDManager"]
+	def getAllPvDs ( self, *argv ):
+		print ( "Got request: " + " ".join (argv) )
+		return "Hello to you too"
+		#return ["Hello", "from", "PvDManager"]
 
 	# on client side for dbus:
 	# bus = dbus.SystemBus()
