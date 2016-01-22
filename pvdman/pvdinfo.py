@@ -8,6 +8,12 @@ class MTUInfo:
     # 32-bit unsigned integer
     self.mtu = mtu
 
+  def __eq__(self, other):
+    return self.mtu == other.mtu
+
+  def __ne__(self, other):
+    return not self == other
+
 
 # https://tools.ietf.org/html/rfc4861
 class PrefixInfo:
@@ -25,6 +31,15 @@ class PrefixInfo:
     # netaddr.IPAddress
     self.prefix = prefix
 
+  def __eq__(self, other):
+    return (self.prefixLength == other.prefixLength and
+            self.onLink == other.onLink and
+            self.autoAddressConfig == other.autoAddressConfig and
+            self.prefix == other.prefix)
+
+  def __ne__(self, other):
+    return not self == other
+
 
 # https://tools.ietf.org/html/rfc4191
 class RouteInfo:
@@ -38,6 +53,14 @@ class RouteInfo:
     # netaddr.IPAddress
     self.prefix = prefix
 
+  def __eq__(self, other):
+    return (self.prefixLength == other.prefixLength and
+            self.routePreference == other.routePreference and
+            self.prefix == other.prefix)
+
+  def __ne__(self, other):
+    return not self == other
+
 
 # https://tools.ietf.org/html/rfc6106
 class RDNSSInfo:
@@ -47,6 +70,12 @@ class RDNSSInfo:
     # [] of netaddr.IPAddress
     self.addresses = addresses
 
+  def __eq__(self, other):
+    return self.addresses == other.addresses
+
+  def __ne__(self, other):
+    return not self == other
+
 
 # https://tools.ietf.org/html/rfc6106
 class DNSSLInfo:
@@ -55,6 +84,12 @@ class DNSSLInfo:
     self.lifetime = lifetime
     # [] of str
     self.domainNames = domainNames
+
+  def __eq__(self, other):
+    return self.domainNames == other.domainNames
+
+  def __ne__(self, other):
+    return not self == other
 
 
 # https://tools.ietf.org/html/rfc6775
@@ -71,6 +106,15 @@ class LoWPANContextInfo:
     # netaddr.IPAddress
     self.contextPrefix = contextPrefix
 
+  def __eq__(self, other):
+    return (self.contextLength == other.contextLength and
+            self.compression == other.compression and
+            self.contextId == other.contextId and
+            self.contextPrefix == other.contextPrefix)
+
+  def __ne__(self, other):
+    return not self == other
+
 
 # https://tools.ietf.org/html/rfc6775
 class ABROInfo:
@@ -81,6 +125,13 @@ class ABROInfo:
     self.validLifetime = validLifetime
     # netaddr.IPAddress
     self.lbrAddress = lbrAddress
+
+  def __eq__(self, other):
+    return (self.version == other.version and
+            self.lbrAddress == other.lbrAddress)
+
+  def __ne__(self, other):
+    return not self == other
 
 
 class PvdInfo:
@@ -96,3 +147,16 @@ class PvdInfo:
     self.dnssls = dnssls
     self.lowpancontexts = lowpancontexts
     self.abros = abros
+
+  def __eq__(self, other):
+    return (self.pvdId == other.pvdId and
+            self.mtu == other.mtu and
+            self.prefixes == other.prefixes and
+            self.routes == other.routes and
+            self.rdnsses == other.rdnsses and
+            self.dnssls == other.dnssls and
+            self.lowpancontexts == other.lowpancontexts and
+            self.abros == other.abros)
+
+  def __ne__(self, other):
+    return not self == other

@@ -8,26 +8,27 @@ import argparse
 
 from pvdman import PvdManager
 from ndpclient import NDPClient
+from pvdserver import PvdApiServer
 
 
-class PvdApiServer ( dbus.service.Object ):
-	''' TODO '''
-	def __init__(self):
-		# using system bus - put pvd-man.conf file into /etc/dbus-1/system.d/
-		bus_name = dbus.service.BusName('org.freedesktop.PvDManager', bus=dbus.SystemBus())
-		dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/PvDManager')
-
-	@dbus.service.method('org.freedesktop.PvDManager')
-	def getAllPvDs ( self, *argv ):
-		print ( "Got request: " + " ".join (argv) )
-		return "Hello to you too"
-		#return ["Hello", "from", "PvDManager"]
-
-	# on client side for dbus:
-	# bus = dbus.SystemBus()
-	# pvdApiClient = bus.get_object('org.freedesktop.PvDManager', '/org/freedesktop/PvDManager')
-	# getAllPvDs = pvdApiClient.get_dbus_method('getAllPvDs', 'org.freedesktop.PvDManager')
-	# print ( str(getAllPvDs()) )
+#class PvdApiServer ( dbus.service.Object ):
+#	''' TODO '''
+#	def __init__(self):
+#		# using system bus - put pvd-man.conf file into /etc/dbus-1/system.d/
+#		bus_name = dbus.service.BusName('org.freedesktop.PvDManager', bus=dbus.SystemBus())
+#		dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/PvDManager')
+#
+#	@dbus.service.method('org.freedesktop.PvDManager')
+#	def getAllPvDs ( self, *argv ):
+#		print ( "Got request: " + " ".join (argv) )
+#		return "Hello to you too"
+#		#return ["Hello", "from", "PvDManager"]
+#
+#	# on client side for dbus:
+#	# bus = dbus.SystemBus()
+#	# pvdApiClient = bus.get_object('org.freedesktop.PvDManager', '/org/freedesktop/PvDManager')
+#	# getAllPvDs = pvdApiClient.get_dbus_method('getAllPvDs', 'org.freedesktop.PvDManager')
+#	# print ( str(getAllPvDs()) )
 
 
 def ndp_pending ( fd, cond, ndpc, pvdman ):
@@ -45,14 +46,14 @@ if __name__ == "__main__":
 	parser.add_argument ( '-u', required=False, type=str, help='PvD identifier to ask from radvd', dest='uuid' )
 	arg = parser.parse_args()
 
-	# main loop, dbus initialization
-	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-	apiDBUSResponder = PvdApiServer()
-	print ( "PvdApiServer Initialized" )
-
 	# create pvdmanager control object
 	pvdman = PvdManager()
 	print ( "PvdManager Initialized" )
+
+	# main loop, dbus initialization
+	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+	apiDBUSResponder = PvdApiServer(pvdman)
+	print ( "PvdApiServer Initialized" )
 
 	# create ndpclient object and register socket for events
 	ndpc = NDPClient( iface = arg.iface )
