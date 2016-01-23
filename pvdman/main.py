@@ -10,28 +10,8 @@ from pvdman import PvdManager
 from ndpclient import NDPClient
 from pvdserver import PvdApiServer
 
-
-#class PvdApiServer ( dbus.service.Object ):
-#	''' TODO '''
-#	def __init__(self):
-#		# using system bus - put pvd-man.conf file into /etc/dbus-1/system.d/
-#		bus_name = dbus.service.BusName('org.freedesktop.PvDManager', bus=dbus.SystemBus())
-#		dbus.service.Object.__init__(self, bus_name, '/org/freedesktop/PvDManager')
-#
-#	@dbus.service.method('org.freedesktop.PvDManager')
-#	def getAllPvDs ( self, *argv ):
-#		print ( "Got request: " + " ".join (argv) )
-#		return "Hello to you too"
-#		#return ["Hello", "from", "PvDManager"]
-#
-#	# on client side for dbus:
-#	# bus = dbus.SystemBus()
-#	# pvdApiClient = bus.get_object('org.freedesktop.PvDManager', '/org/freedesktop/PvDManager')
-#	# getAllPvDs = pvdApiClient.get_dbus_method('getAllPvDs', 'org.freedesktop.PvDManager')
-#	# print ( str(getAllPvDs()) )
-
-
 def ndp_pending ( fd, cond, ndpc, pvdman ):
+	''' Process received RAs '''
 	pvdinfos = ndpc.get_pvdinfo()
 	if pvdinfos:
 		for ( iface, pvdInfo ) in pvdinfos:
