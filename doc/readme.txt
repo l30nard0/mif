@@ -7,8 +7,8 @@ code is available at https://github.com/dskvorc/mif-pvdman.
 Contents
 --------
 1. Architecture Overview and Implementation Details
-2. Description of Test Environment
-3. Setup Instructions
+2. PvD Properties
+3. Overview of Test Environment
 
 1. Architecture Overview and Implementation Details
 ---------------------------------------------------
@@ -94,8 +94,65 @@ within a given namespace, it should be started with:
 (4) Problem: changing network namespace requires root privileges. Until more
     appropriate solution is found, applications are run as root.
 
+2. PvD Properties
+-----------------
+With RA messages routers provides network relate parameters for PvDs.
+Other parameters (in this "draft" called "properties") are also provided by
+router, but only on request, using HTTP protocol on router's link-local address.
 
-2. Description of Test Environment
+Upon receiving PvD information from router, MIF-pvdman tries to get file with
+PvD properties from the same router. If such file exist, network related PvD
+parameters are extended with ones (properties) from received file.
+
+Client application receives all those additional properties on request, and may
+request only those PvDs that match on requested property.
+
+Current implementation is very rudimentary: files on router are in JSON format;
+MIF-pvdman interpret them (because its written in Python and using JSON is easy,
+while client applications are written in C).
+In real implementation this should be reversed (only client should interpret
+file with PvDs' properties).
+
+Properties used in this example are just an example (name, type, bandwith, price).
+The idea is to present mechanism to provide additional PvD properties obtained
+by some mechanism (not by RAs) and let client application decide what to do with
+them. Defining elements of properties is some IETF WG job, or it should be left
+undefined (using specific properties in different environments).
+
+Examples for PvD properties:
+[
+    {
+		"name": "Home internet access",
+		"type": ["general", "wired"],
+		"id": "implicit",
+		"bandwidth": "1 Mbps",
+		"pricing": "free"
+	},
+	{
+		"name": "voip",
+		"type": ["voip"],
+		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
+		"bandwidth": "10 Mbps",
+		"pricing": "0,01 $/MB"
+	},
+	{
+		"name": "TV",
+		"type": ["iptv", "wired"],
+		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
+		"bandwidth": "10 Mbps",
+		"pricing": "free"
+	},
+	{
+		"name": "Internet access over Lucy's phone",
+		"type": ["general", "cellular"],
+		"id": "implicit",
+		"bandwidth": "10 Mbps",
+		"pricing": "0,01 $/MB"
+	}
+]
+
+
+3. Overview of Test Environment
 ----------------------------------
 Prototype system implementation described above is implemented and tested on
 Linux/Fedora 23 and Linux/Ubuntu 14.04. Test environment consists of two
@@ -103,18 +160,16 @@ machines, one being a router running radvd, while another being a regular host
 running MIF-pvdman and client applications. In our experiments, we used two
 virtual machines hosted in VMware Player.
 
-Services on router:
-- radvd (PvD-aware NDP server):
+Services on routers (Rx) and servers (Sx):
+- radvd (PvD-aware NDP server) (only on routers):
   * https://github.com/dskvorc/mif-radvd
-  * configurations from: https://github.com/dskvorc/mif-pvdman/tree/master/conf
-- DNS server (optional, to be configured)
-- web server (optional, for test case presentation)
+- web server (httpd, apache2)
+- DNS server (bind)
 
 Service on client - MIF-PvD:
 - https://github.com/dskvorc/mif-pvdman
-- start with sudo python3 main.py
+- start with scripts in "demos" or with sudo python3 main.py
   * (requires python3 + netaddr + pyroute2 modules)
-  * (install python3-netaddr and python3-pyroute2 modules, or use pip3)
 - NDP client (ndpclient.py):
   * send RS request (on startup)
   * listen for RAs
@@ -128,142 +183,22 @@ Service on client - MIF-PvD:
   * responds to dbus requests from clients (applications on localhost)
 
 Application API:
-- https://github.com/dskvorc/mif-pvdman/client_api
-- pvd_api - library with client side API
+- https://github.com/dskvorc/mif-pvdman/api
+- api - library with client side API
   * uses dbus to connect to PvD Manager
-  * methods: pvd_get_by_id, pvd_activate
+  * methods: pvd_get_by_id, pvd_get_by_properties, pvd_activate
   * (requires glib2-devel package (libglib2-devel on fedora))
 - API is used to select "current" PvD: all next network related operations
   will use that PvD (unless they were initialized before, in different PvD)
   until different PvD is selected
-- test application client_api/example.c retrieves all PvDs from MIF-PvD, select
-  PvD with Id given on command line, and executes given command in that PvD
-  * usage: sudo ./example [pvd-id [some command with parameters]]
-  * copy/paste pvd-id from printed list (when executed just as ./example)
+
+Test applications:
+- in "testapps"
+- pvd_list, pvd_run, pvd_prop_run, ...
+- usage: sudo ./<prog> [arguments]
 
 
 Test Case
 ---------
-UPDATE: Test cases and results are presented in conf/tc01 with configuration
+Test cases and results are presented in "demos" with configuration
 and scripts and little documentation (start with readme.txt).
-
-What follows here is an old test case.
----
-Network environment consists of a client connected to two routers, each of them
-having a web server behind. Web server 1 is only reachable through router 1,
-while web server 2 is only reachable through router 2. Each router advertises
-one PvD. Client receives network configuration from two PvDs and configures both
-of them, but should carefully select the proper one to access a particular web
-server.
-
-Simulated environment:
-+-----------+              +-----------+          +-----------+
-|           |              |           |          |           |
-|           |              |           |          |    web    |
-|  client   +--o----+---o--+   router  |--o----o--|   server  |
-|           |       |      |     1     |          |     1     |
-|           |       |      |           |          |           |
-+-----------+       |      +-----------+          +-----------+
-                    |
-                    |      +-----------+          +-----------+
-                    |      |           |          |           |
-                    |      |           |          |    web    |
-                    +---o--+   router  |--o----o--|   server  |
-                           |     2     |          |     2     |
-       Figure 1            |           |          |           |
-                           +-----------+          +-----------+
-
-
-Real test environment:
-Test environment consists of two virtual machines running on a single host. One
-virtual machine behaves like a client, while another one simulates both routers
-and web servers using separate network interfaces (router 1 + web server 1 on
-eth1, router 2 + web server 2 on eth2).
-
-      o eth0                  eth0 o
-      |                            |
-+-----+-----+              +-------+------+
-|           |         eth1 |              |
-|    VM1    | eth1   +--o--+     VM2      |
-| (client)  +--o-----+     | (routers +   |
-|           |        +--o--+ web servers) |
-|           |         eth2 |              |
-+-----------+              +--------------+
-                Figure 2
-
-Router settings:
-----------------
-Addresses: (eth0 used for Internet access on both virtual machines)
-router-eth1: local link + 2001:db8:1::1/64, 2001:db8:2::1/64
-router-eth2: local link + 2001:db8:3::1/64, 2001:db8:4::1/64
-radvd:
- - on eth1: prefix 2001:db8:1/64 (implicit PvD)
-            prefix 2001:db8:2/64 (explicit PvD, inside PvD container)
- - on eth2: prefix 2001:db8:3/64 (implicit PvD)
-            prefix 2001:db8:4/64 (explicit PvD, inside PvD container)
-
-httpd.conf on router:
-Listen [2001:db8:2::1]:80
-Listen [2001:db8:4::1]:80
-...
-<VirtualHost [2001:db8:2::1]:80>
-DocumentRoot "/var/www/html/www1" # index.html: Hello from WWW1
-</VirtualHost>
-<VirtualHost [2001:db8:4::1]:80>
-DocumentRoot "/var/www/html/www2" # index.html: Hello from WWW2
-</VirtualHost>
-/var/www/html
-
-Since httpd accepts connections made on wrong interface (e.g. when packet with
-IP address of eth2 arrives on eth1), additional filtering is required to
-simulate setup from Figure 1.
-Added iptables rules on router:
-sudo ip6tables -A INPUT -6 -i eth1 -d 2001:db8:3::1 -j DROP
-sudo ip6tables -A INPUT -6 -i eth1 -d 2001:db8:4::1 -j DROP
-sudo ip6tables -A INPUT -6 -i eth2 -d 2001:db8:1::1 -j DROP
-sudo ip6tables -A INPUT -6 -i eth2 -d 2001:db8:2::1 -j DROP
-(when packet arrive on wrong interface ignore it)
-
-Client settings:
-----------------
-Physical interfaces are not managed by MIF-pvdman.
-IP addresses on virtual devices set per PvD information by MIF-pvdman.
-
-All RAs arrive on eth1 => virtual devices (macvlan) created for namespaces are
-bound to this interface (therefore @if3 suffix on virtual interface).
-Example "ip a":
-$ sudo ./pvd_run 4176b877-e8be-8242-9540-6ea13a3a1d60 ip a
-[cut]
-4: mifpvd@if3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default
-    link/ether c2:fa:bb:bc:5c:49 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet6 2001:db8:1:0:c0fa:bbff:febc:5c49/64 scope global
-       valid_lft forever preferred_lft forever
-    inet6 fe80::c0fa:bbff:febc:5c49/64 scope link
-       valid_lft forever preferred_lft forever
-
-Test results
--------------
-PvD configurations generated by MIF-pvdman:
-PvD ID                                netns     iface  IP address
-4176b877-e8be-8242-9540-6ea13a3a1d60  mifpvd-3  eth1   2001:db8:1:0:c0fa:bbff:febc:5c49
-f037ea62-ee4f-44e4-825c-16f2f5cc9b3f  mifpvd-4  eth1   2001:db8:2:0:dce8:1fff:fe21:8d4a
-cf44e119-7e3f-e302-549b-82a9c6fd6210  mifpvd-1  eth1   2001:db8:3:0:2880:68ff:fe8d:add0
-f037ea62-ee4f-44e4-825c-16f2f5cc9b3e  mifpvd-2  eth1   2001:db8:4:0:38f5:32ff:fe4f:d50a
-
-$ sudo ./pvd_run 4176b877-e8be-8242-9540-6ea13a3a1d60 wget http://[2001:db8:2::1]:80
-OK (index.html saved: WWW1)
-$ sudo ./pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3f wget http://[2001:db8:2::1]:80
-OK (index.html saved: WWW1)
-$ sudo ./pvd_run cf44e119-7e3f-e302-549b-82a9c6fd6210 wget http://[2001:db8:2::1]:80
-FAIL (Connecting to [2001:db8:2::1]:80... ^C)
-$ sudo ./pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3e wget http://[2001:db8:2::1]:80
-FAIL (Connecting to [2001:db8:2::1]:80... ^C)
-
-$ sudo ./pvd_run 4176b877-e8be-8242-9540-6ea13a3a1d60 wget http://[2001:db8:4::1]:80
-FAIL (Connecting to [2001:db8:4::1]:80... ^C)
-$ sudo ./pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3f wget http://[2001:db8:4::1]:80
-FAIL (Connecting to [2001:db8:4::1]:80... ^C)
-$ sudo ./pvd_run cf44e119-7e3f-e302-549b-82a9c6fd6210 wget http://[2001:db8:4::1]:80
-OK (index.html saved: WWW2)
-$ sudo ./pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3e wget http://[2001:db8:4::1]:80
-OK (index.html saved: WWW2)
