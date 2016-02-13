@@ -1,20 +1,20 @@
-Test case 01
-============
+Demo 01
+========
 
 Network:
 --------
 
-+--------+                       +------+                                +------+
-|        |      2001:db8:1::1/48 |      | 2001:db8:10::1  2001:db8:10::2 |      |
-| Client +-o-+-----------------o-+  R1  |-o----------------------------o-|  S1  |
-|        |   |                   |      |                                |      |
-+--------+   |                   +------+                                +------+
++--------+                      +------+                                +------+
+|        |     2001:db8:1::1/48 |      | 2001:db8:10::1  2001:db8:10::2 |      |
+| Client +-o-+----------------o-+  R1  +-o----------------------------o-+  S1  |
+|        |   |                  |      |                                |      |
++--------+   |                  +------+                                +------+
              |
-             |                   +------+                                +------+
-             |  2001:db8:2::1/48 |      | 2001:db8:20::1  2001:db8:20::2 |      |
-             +-----------------o-+  R2  |-o----------------------------o-|  S2  |
-  Figure 1                       |      |                                |      |
-                                 +------+                                +------+
+             |                  +------+                                +------+
+             | 2001:db8:2::1/48 |      | 2001:db8:20::1  2001:db8:20::2 |      |
+             +----------------o-+  R2  +-o----------------------------o-+  S2  |
+                                |      |                                |      |
+                                +------+                                +------+
 
 PvDs:
 -----
@@ -23,8 +23,16 @@ R1-PVD2: 2001:db8:1:2::/64 (explicit) { "type": ["iptv", "wired"],        "bandw
 R2-PVD1: 2001:db8:2:1::/64 (implicit) { "type": ["internet", "cellular"], "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
 R2-PVD2: 2001:db8:2:2::/64 (explicit) { "type": ["voice", "cellular"],    "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
 
+Expected behavior:
+- default gateway for R1-PVD1 and R1-PVD2 is R1
+- default gateway for R2-PVD1 and R2-PVD2 is R2
+- S1 isn't reachable over R2-PVD1 and R2-PVD2
+- S2 isn't reachable over R1-PVD1 and R1-PVD2
+- public address of R1 isn't reachable over R2-PVD1 and R2-PVD2
+- public address of R2 isn't reachable over R1-PVD1 and R1-PVD2
 
-Testing:
+
+Test setup:
 --------
 On each node, from conf/tc01/ run:
 $ sudo ./run start <node-name>

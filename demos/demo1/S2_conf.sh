@@ -1,5 +1,7 @@
 #!/bin/bash
 
+NAME="S2"
+
 # Update values here!
 
 # assuming: DEV0 - general internet access - not to be used during test
@@ -8,7 +10,9 @@ DEV0=eno16777736 # device that should be turned off during tests
 DEV1=eno33554984 # first device used in tests
 
 # IP addresses
-IP1="2001:db8:20::2/64"   # for DEV1
+IP1="2001:db8:20::2"   # for DEV1
+IP1NET="$IP1/64"
+
 ROUTE1_ADD="/sbin/ip -6 route add 2001:db8::/32 via 2001:db8:20::1"
 ROUTE1_DEL="/sbin/ip -6 route del 2001:db8::/32 via 2001:db8:20::1"
 

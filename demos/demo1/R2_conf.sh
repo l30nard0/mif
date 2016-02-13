@@ -1,5 +1,7 @@
 #!/bin/bash
 
+NAME="R2"
+
 # Update values here!
 
 # assuming: DEV0 - general internet access - not to be used during test
@@ -9,8 +11,10 @@ DEV1=eno33554984 # first device used in tests
 DEV2=eno50332208 # second device usen in tests (empty if not used)
 
 # IP addresses
-IP1="2001:db8:2::1/48"   # for DEV1
-IP2="2001:db8:20::1/64"  # for DEV2
+IP1="2001:db8:2::1"   # for DEV1
+IP2="2001:db8:20::1"  # for DEV2
+IP1NET="$IP1/48"
+IP2NET="$IP2/64"
 
 # radvd configuration
 PVD_1_ID="implicit"

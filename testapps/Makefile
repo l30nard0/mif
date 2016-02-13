@@ -18,7 +18,7 @@ $(PVDLIB):
 	@cd $(API) && $(MAKE)
 
 define COMPILE
-$(2): $(1)
+$(2): $(1) $(PVDLIB)
 	gcc $$< -o $$@ $(CFLAGS) $(LDFLAGS) $(GFLAGS)
 endef
 $(foreach var,$(SOURCES),$(eval $(call COMPILE,$(var),$(var:.c=))))
