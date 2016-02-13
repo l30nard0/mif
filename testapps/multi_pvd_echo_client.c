@@ -103,15 +103,19 @@ int main ( int argc, char **argv )
 		size = sendto ( sock2, &out_buf2, strlen(out_buf2)+1, 0, server2, len2 );
 		if ( size < 0 ) { perror ("sendto"); return -1; }
 
-		size = recv ( sock1, in_buf, MAXBUF, 0 );
-		if ( size < 0 ) { perror("recvfrom"); return -1; }
-		printf ( "%s", in_buf ); fflush(stdout);
-
-		size = recv ( sock2, in_buf, MAXBUF, 0 );
-		if ( size < 0 ) { perror("recvfrom"); return -1; }
-		printf ( "%s", in_buf ); fflush(stdout);
-
 		sleep(1);
+
+		size = recv ( sock1, in_buf, MAXBUF, MSG_DONTWAIT );
+		if ( size < 0 )
+			perror("S1:recvfrom");
+		else
+			printf ( "S1:%s\n", in_buf );
+
+		size = recv ( sock2, in_buf, MAXBUF, MSG_DONTWAIT );
+		if ( size < 0 )
+			perror("S2:recvfrom");
+		else
+			printf ( "S2:%s\n", in_buf );
 	}
 
 	return 0;
