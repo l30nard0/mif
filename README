@@ -1,0 +1,10 @@
+Repository contains an implementation of multiple interface (MIF)
+provisioning domain (PvD) support (discussed by IETF MIF WG).
+
+Included are:
+- radvd    - modified radvd server which includes support for
+		     PvD container option (for routers)
+- pvdman   - MIF PvD manager for client hosts
+- api      - API for client applications (in C) that will be PvD aware
+- testapps - several PvD aware applications for testing MIF functionality
+- demos    - demos that describe and demonstrate MIF functionality

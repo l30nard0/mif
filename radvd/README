@@ -1,0 +1,4 @@
+Modified radvd that supports PvD container option (PVD_CO) is available at:
+https://github.com/dskvorc/mif-radvd
+
+Sample configuration files are present in demos.
