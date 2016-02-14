@@ -50,7 +50,7 @@ function start {
   #fi
 
   if [ "$ROLE" = "C" ]; then
-    start_client
+    client_start
   else
     # R1/R2/S1/S2 - very similar
 
@@ -121,7 +121,7 @@ function stop {
   #fi
 
   if [ "$ROLE" = "C" ]; then
-    stop_client
+    client_stop
   else
 
     # R1/R2/S1/S2
@@ -152,9 +152,7 @@ function clean { # logs, applications, ...
   if [ -f $NAMEDCONFDIR/$NAMEDCONF.orig ]; then
     cp $NAMEDCONFDIR/$NAMEDCONF.orig $NAMEDCONFDIR/$NAMEDCONF
   fi
-  rm -rf $TMPDIR
-  rm -f /etc/dbus-1/system.d/dbus-pvd-man.conf
-  ( cd $TESTAPPS && make clean )
+  client_clean
 }
 
 # call function for given command
