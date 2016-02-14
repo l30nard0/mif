@@ -63,7 +63,7 @@ function start {
     source $DEMOHOME/httpd.conf > $HTTPDCONFDIR/pvd-httpd.conf
     mkdir -p $HTTPDPVD
     source $DEMOHOME/pvd-info.json > $HTTPDPVD/pvd-info.json
-    echo "Web server on $ROLE" > $HTTPDHTML/pvd-test.html
+    source $DEMOHOME/index.html > $HTTPDHTML/index.html
     systemctl start $HTTPDPROG.service
 
     if [ "$ROLE" = "R1" -o "$ROLE" = "R2" ]; then
@@ -123,7 +123,7 @@ function stop {
     systemctl stop $HTTPDPROG.service
     rm -f $HTTPDCONFDIR/pvd-httpd.conf
     rm -rf $HTTPDPVD
-    rm -f $HTTPDHTML/pvd-test.html
+    rm -f $HTTPDHTML/index.html
 
     if [ -n "$ROUTE1_DEL" ]; then eval $ROUTE1_DEL; fi
     if [ -n "$ROUTE2_DEL" ]; then eval $ROUTE2_DEL; fi

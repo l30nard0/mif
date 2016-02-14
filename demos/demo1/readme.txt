@@ -85,28 +85,28 @@ Running commands in PvD given by PvD-Id
 Lets try to reach S1 and S2 from mifpvd-1 (c79b1614-66bf-e259-82b0-807aaed34c17)
 
 ----
-$ sudo ./pvd_run c79b1614-66bf-e259-82b0-807aaed34c17 wget http://[2001:db8:10::2]/pvd-test.html
+$ sudo ./pvd_run c79b1614-66bf-e259-82b0-807aaed34c17 wget http://[2001:db8:10::2]/index.html
 Activating pvd: c79b1614-66bf-e259-82b0-807aaed34c17:
 pvd c79b1614-66bf-e259-82b0-807aaed34c17 activated!
-Executing: wget http://[2001:db8:10::2]/pvd-test.html
---2016-02-12 00:02:40--  http://[2001:db8:10::2]/pvd-test.html
+Executing: wget http://[2001:db8:10::2]/index.html
+--2016-02-12 00:02:40--  http://[2001:db8:10::2]/index.html
 Connecting to [2001:db8:10::2]:80... failed: Network is unreachable.
 
-$ sudo ./pvd_run c79b1614-66bf-e259-82b0-807aaed34c17 wget http://[2001:db8:20::2]/pvd-test.html
+$ sudo ./pvd_run c79b1614-66bf-e259-82b0-807aaed34c17 wget http://[2001:db8:20::2]/index.html
 Activating pvd: c79b1614-66bf-e259-82b0-807aaed34c17:
 pvd c79b1614-66bf-e259-82b0-807aaed34c17 activated!
-Executing: wget http://[2001:db8:20::2]/pvd-test.html
---2016-02-12 00:03:19--  http://[2001:db8:20::2]/pvd-test.html
+Executing: wget http://[2001:db8:20::2]/index.html
+--2016-02-12 00:03:19--  http://[2001:db8:20::2]/index.html
 Connecting to [2001:db8:20::2]:80... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: 17 [text/html]
-Saving to: ‘pvd-test.html’
+Saving to: ‘index.html’
 
-pvd-test.html  100%[=====================================>] 17  --.-KB/s in 0s
+index.html  100%[=====================================>] 17  --.-KB/s in 0s
 
-2016-02-12 00:03:19 (2,53 MB/s) - ‘pvd-test.html’ saved [17/17]
+2016-02-12 00:03:19 (2,53 MB/s) - ‘index.html’ saved [17/17]
 
-$ cat pvd-test.html
+$ cat index.html
 Web server on S2
 ----
 
