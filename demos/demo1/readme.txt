@@ -54,7 +54,7 @@ $ ./pvd_list
 $ sudo ./pvd_run <pvd-id> command
 
 
-Example executions on client side, after all routers and servers were started:
+Example executions on client side, after all routers and servers were started
 ------------------------------------------------------------------------------
 
 List available PvDs
@@ -158,3 +158,11 @@ Client opens two UDP sockets, each in its PvD:
 - 2nd one will go to S2 through R2 (since R2 is default gateway for 2nd PVD)
 
 Program will send "1" to S1 and "2" to S2. If echo is received its printed.
+
+
+DNS names
+---------
+DNS server is started on R1, R2, S1 and S2.
+R1 and S1 have names for www.pvd1.org => S1, www1.pvd1.org => R1
+R2 and S2 have names for www.pvd2.org => S2, www1.pvd2.org => R2
+IP addresses from previous examples can be replaced with names.
