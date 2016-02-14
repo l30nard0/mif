@@ -1,5 +1,5 @@
 
-import dbus
+import dbus, threading, time, os
 import dbus.service
 import dbus.mainloop.glib
 from gi.repository import GObject
@@ -18,6 +18,35 @@ def ndp_pending ( fd, cond, ndpc, pvdman ):
 			pvdman.setPvd ( iface, pvdInfo )
 
 	return True
+
+# check routers
+ALIVE_TIMEOUT=10
+def pvd_ping ( *args ):
+	if pvd_ping.cnt > 0:
+		pvdman, ndpc = args
+		retry = set()
+
+		# send ping to all routers
+		for pvd_key in list(pvdman.pvds):
+			phyIfaceName, pvdId = pvd_key
+			routerAddress = pvdman.pvds[pvd_key].pvdInfo.routerAddress
+			cmd = "ping6 -W 1 -n -q -c 1 -I " + str(phyIfaceName) + " "
+			cmd += str(routerAddress) + " 1> /dev/null 2> /dev/null"
+			if os.system(cmd) != 0:
+				#host not responding
+				pvdman.removePvd ( phyIfaceName, pvdId )
+				retry.add ( ( phyIfaceName, routerAddress ) )
+
+		# retry with RS
+		for phyIfaceName, routerAddress in retry:
+			ndpc.send_rs ( iface = phyIfaceName, dest = routerAddress )
+
+	# set timer again
+	t = threading.Timer ( ALIVE_TIMEOUT, pvd_ping, args )
+	t.daemon = True
+	t.start()
+	pvd_ping.cnt += 1
+pvd_ping.cnt = 0
 
 if __name__ == "__main__":
 	# parse command line arguments
@@ -43,6 +72,9 @@ if __name__ == "__main__":
 	# if interface was given, send RS over that interface (otherwise? sent to all interfaces?)
 	if arg.iface:
 		ndpc.send_rs ()
+
+	# setup timer for periodic checking of pvds
+	pvd_ping ( pvdman, ndpc )
 
 	# mail loop - wait for events
 	loop = GObject.MainLoop()

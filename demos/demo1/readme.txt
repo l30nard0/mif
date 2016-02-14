@@ -1,5 +1,6 @@
 Demo 01
 ========
+(Overview of services used on nodes is described in doc/readme.txt)
 
 Network:
 --------
@@ -33,7 +34,7 @@ Expected behavior:
 
 
 Test setup:
---------
+-----------
 On each node, from conf/tc01/ run:
 $ sudo ./run start <node-name>
 For example, on router R1:
@@ -110,6 +111,7 @@ $ cat index.html
 Web server on S2
 ----
 
+Comment:
 S2 is reachable over mifpvd-1 and mifpvd-2, S1 over mifpvd-3 and mifpvd-4.
 ----
 
@@ -118,6 +120,9 @@ Running commands in PvD given by properties
 
 $ sudo ./pvd_prop_run "{\"type\":\"internet\",\"pricing\":\"free\"}" firefox http://[2001:db8:10::2]/swtrailer.mp4
 
+Comment:
+If PvDs with such properties exists, chose first and use it to run give command.
+If such PvD doesn't exist print error and exit.
 
 Choose command depending on available PvDs
 ++++++++++++++++++++++++++++++++++++++++++
@@ -125,13 +130,17 @@ Choose command depending on available PvDs
 $ sudo ./pvd_fallback_example.sh
 
 Script tries first to use PvD which has both "internet" and "free" properties.
-If such PvD is available an example movie is streamed from S1.
-If such PvD isn't available an example audio file is streamed from S2.
+If such PvD is available an example movie is streamed from S1 (over R1).
+If such PvD isn't available an example audio file is streamed from S2 (over R2).
 
-To demonstrate this feature, first stop services on R1, restart services on
-client, and then run previous script. It should play audio.
-Then start services on R1, and wait for its RAs to reach client (or restart
-services on Client). Now it should stream video.
+To demonstrate this feature, first stop R1 (shut down or just stop services and
+disable interface which connects to client). After an timeout client will
+detect that R1 is unavailable and remove all PvDs that were obtained by R1.
+If pvd_fallback_example.sh is started now, PvD is chosen from ones offered by R2,
+but since those PvD aren't "free" other action is performed (movie is not
+played, rather, audio is streamed.
+If R1 is then restarted and pvd_fallback_example.sh started again it should
+stram movie from S1 (over R1).
 
 
 Using two PvDs simultaneously from single application
@@ -144,8 +153,8 @@ $ sudo ./multi_pvd_echo_client \
   c79b1614-66bf-e259-82b0-807aaed34c17 2001:db8:20::2 20000
 12121212
 
-Client opens two sockets, each in its PvD:
+Client opens two UDP sockets, each in its PvD:
 - 1st one will go to S1 through R1 (since R1 is default gateway for 1st PVD)
 - 2nd one will go to S2 through R2 (since R2 is default gateway for 2nd PVD)
 
-Output "121212..." its echo from S1 (1's) and S2 (2's).
+Program will send "1" to S1 and "2" to S2. If echo is received its printed.
