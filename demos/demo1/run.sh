@@ -1,6 +1,6 @@
 #!/bin/bash
 
-Usage () {
+function Usage () {
   echo "Usage: sudo $0 start|stop C|R1|R2|S1|S2"
   exit
 }
@@ -14,17 +14,32 @@ ROLE=$2
 # directories
 DEMOHOME=${0%/*}
 REPOROOT=$DEMOHOME/../..
-PVDMAN=$REPOROOT/pvdman
 TMPDIR=$DEMOHOME/__mif_cache__
-HTTPDPROG=apache2
-HTTPDCONFDIR=/etc/apache2/sites-enabled #where to store info for web server
-HTTPDHTML=/var/www/html
-HTTPDPVD=/var/www/html/_pvd_info_
-# it is assumed that web server is already configured
-# and serves documents from: $HTTPDHTML
-RADVD=/usr/local/sbin/radvd
 TESTAPPS=$REPOROOT/testapps
 
+# get settings from node's configuration file
+source ./${ROLE}_conf.sh
+
+# dns server
+NAMEDCONFDIR=/etc/bind
+NAMEDCONF=named.conf # or named.conf.local for lubuntu
+DNSPVDZONE=pvd${IND}.org
+NAMEDPVDZONEFILE=${DNSPVDZONE}.db
+
+# radvd
+PVD_1_PREFIX="2001:db8:${IND}:1::/64"
+PVD_1_ROUTE="2001:db8:${IND}:1::/64"
+PVD_1_DNSSL="$DNSPVDZONE"
+PVD_1_RDNSS="2001:db8:${IND}::1 2001:db8:${IND}0::2"
+PVD_2_PREFIX="2001:db8:${IND}:2::/64"
+PVD_2_ROUTE="2001:db8:${IND}:2::/64"
+PVD_2_DNSSL="$DNSPVDZONE"
+PVD_2_RDNSS="2001:db8:${IND}::1 2001:db8:${IND}0::2"
+
+# web server
+HTTPDCONFDIR=/etc/apache2/sites-enabled
+HTTPDHTML=/var/www/html
+HTTPDPVD=/var/www/html/_pvd_info_
 
 function start {
   mkdir -p $TMPDIR
@@ -35,53 +50,60 @@ function start {
   #fi
 
   if [ "$ROLE" = "C" ]; then
-    # C - client specific code
-    if [ ! -f /etc/dbus-1/system.d/dbus-pvd-man.conf ]; then
-      cp dbus-pvd-man.conf /etc/dbus-1/system.d/
-    fi
-    if [ -n "$DEV1" ]; then
-      python3 $PVDMAN/main.py -i $DEV1 2>$TMPDIR/pvdman-error.log 1> $TMPDIR/pvd-man.log &
-    else
-      python3 $PVDMAN/main.py 2>$TMPDIR/pvdman-error.log 1> $TMPDIR/pvd-man.log &
-    fi
-    echo "mif-pvd man started"
-    echo "start pvd-aware programs now"
-
+    start_client
   else
+    # R1/R2/S1/S2 - very similar
 
-    # R1/R2/S1/S2
+    # ip addresses
     sysctl -w net.ipv6.conf.all.forwarding=1
-
     if [ -z "$DEV1" -o -z "$IP1NET" ]; then
       echo "DEV1 and IP1NET must be provided for $ROLE"
       stop && exit 1
     fi
     /sbin/ip -6 addr add $IP1NET dev $DEV1
-
-    # http
-    systemctl stop $HTTPDPROG.service
-    source $DEMOHOME/httpd.conf > $HTTPDCONFDIR/pvd-httpd.conf
-    mkdir -p $HTTPDPVD
-    source $DEMOHOME/pvd-info.json > $HTTPDPVD/pvd-info.json
-    source $DEMOHOME/index.html > $HTTPDHTML/index.html
-    systemctl start $HTTPDPROG.service
-
     if [ "$ROLE" = "R1" -o "$ROLE" = "R2" ]; then
       if [ -z "$IP2NET" ]; then
         echo "Address for DEV2 must be provided for $ROLE"
         stop && exit 1
       fi
       /sbin/ip -6 addr add $IP2NET dev $DEV2
+    fi
+
+    # dns server
+    if [ -n "$STARTNAMED" ]; then
+      if [ ! -f $NAMEDCONFDIR/$NAMEDCONF.orig ]; then
+        cp $NAMEDCONFDIR/$NAMEDCONF $NAMEDCONFDIR/$NAMEDCONF.orig
+      fi
+      source $DEMOHOME/bind_append.conf >> $NAMEDCONFDIR/$NAMEDCONF
+      source $DEMOHOME/pvd-zone.db > $NAMEDCONFDIR/$NAMEDPVDZONEFILE
+      systemctl restart bind9.service
+      echo "dns server started"
+    fi
+
+    # web server
+    if [ -n "$STARTHTTPD" ]; then
+      source $DEMOHOME/httpd.conf > $HTTPDCONFDIR/pvd-httpd.conf
+      mkdir -p $HTTPDPVD
+      source $DEMOHOME/pvd-info.json > $HTTPDPVD/pvd-info.json
+      source $DEMOHOME/index.html > $HTTPDHTML/index.html
+      systemctl restart apache2.service
+      echo "web server started"
+    fi
+
+    # radvd server
+    if [ -n "$STARTRADVD" ]; then
       source $DEMOHOME/radvd.conf > $TMPDIR/radvd.conf
-      $RADVD -d 5 -n -C $TMPDIR/radvd.conf -m logfile -l $TMPDIR/radvd.log &
+      /usr/local/sbin/radvd -d 5 -n -C $TMPDIR/radvd.conf -m logfile -l $TMPDIR/radvd.log &
       echo "radvd started"
-    else
-      # start echo udp server
-      if [ ! -f $TESTAPPS/echo_server ]; then
-        ( cd $TESTAPPS/ && make echo_server )
+    fi
+
+    # custom server (for testing purposes)
+    if [ -n "$CUSTOMSERVERAPP" ]; then
+      if [ ! -f $TESTAPPS/$CUSTOMSERVERAPP ]; then
+        ( cd $TESTAPPS/ && make $CUSTOMSERVERAPP )
       fi
       sleep 1 # wait for IP address to be really assigned before binding to it
-      $TESTAPPS/echo_server "$IP1" 20000 > $TMPDIR/echo_server.log &
+      $TESTAPPS/$CUSTOMSERVERAPP $IP1 20000 > $TMPDIR/$CUSTOMSERVERAPP.log &
     fi
 
     # if some routes need to be added on server or routers
@@ -99,48 +121,42 @@ function stop {
   #fi
 
   if [ "$ROLE" = "C" ]; then
-    killall -SIGINT python3 && echo "mif-pvd man stopped"
-    py3clean $PVDMAN
-
+    stop_client
   else
 
     # R1/R2/S1/S2
     sysctl -w net.ipv6.conf.all.forwarding=0
 
-    if [ -n "$IP1NET" ]; then
-      /sbin/ip -6 addr del $IP1NET dev $DEV1
-    fi
-    if [ "$ROLE" = "R1" -o "$ROLE" = "R2" ]; then
-      if [ -n "$IP2NET" ]; then
-        /sbin/ip -6 addr del $IP2NET dev $DEV2
-      fi
-      killall radvd && echo "radvd stopped"
-    else
-      killall echo_server && echo "echo_server stopped"
-    fi
+    if [ -n "$STARTNAMED" ]; then systemctl stop bind9.service; fi
+    if [ -n "$STARTHTTPD" ]; then systemctl stop apache2.service; fi
+    if [ -n "$STARTRADVD" ]; then killall radvd; fi
+    if [ -n "$CUSTOMSERVERAPP" ]; then killall $CUSTOMSERVERAPP; fi
 
-    # http
-    systemctl stop $HTTPDPROG.service
-    rm -f $HTTPDCONFDIR/pvd-httpd.conf
-    rm -rf $HTTPDPVD
-    rm -f $HTTPDHTML/index.html
+    if [ -n "$IP1NET" ]; then /sbin/ip -6 addr del $IP1NET dev $DEV1; fi
+    if [ -n "$IP2NET" ]; then /sbin/ip -6 addr del $IP2NET dev $DEV2; fi
 
     if [ -n "$ROUTE1_DEL" ]; then eval $ROUTE1_DEL; fi
     if [ -n "$ROUTE2_DEL" ]; then eval $ROUTE2_DEL; fi
     if [ -n "$ROUTE3_DEL" ]; then eval $ROUTE3_DEL; fi
+
   fi
   return 0
 }
 
-function clean {
+function clean { # logs, applications, ...
   stop
+  rm -f $HTTPDCONFDIR/pvd-httpd.conf
+  rm -rf $HTTPDPVD
+  rm -f $HTTPDHTML/index.html
+  rm -f $NAMEDCONFDIR/$NAMEDPVDZONEFILE
+  if [ -f $NAMEDCONFDIR/$NAMEDCONF.orig ]; then
+    cp $NAMEDCONFDIR/$NAMEDCONF.orig $NAMEDCONFDIR/$NAMEDCONF
+  fi
   rm -rf $TMPDIR
   rm -f /etc/dbus-1/system.d/dbus-pvd-man.conf
   ( cd $TESTAPPS && make clean )
 }
 
-# get settings
-source ./${ROLE}_conf.sh
-
 # call function for given command
 eval $COMMAND
+

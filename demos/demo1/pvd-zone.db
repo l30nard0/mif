@@ -1,0 +1,21 @@
+cat << __EOF__
+\$ORIGIN ${DNSPVDZONE}.
+
+\$TTL 86400 ; Time To Live before remote DNS server removes stale records from cache
+
+@ IN SOA ns.${DNSPVDZONE}. root.${DNSPVDZONE}. ( ; Responsible name server and responsible email address without the "@" symbol.
+	1123161063 ; serial number
+	10800 ; refresh (3 hours)
+	3600 ; retry (1 hour)
+	604800 ; expire (1 week)
+	3600 ; minimum (1 hour)
+)
+
+$DNSPVDZONE. IN NS ns.$DNSPVDZONE.
+
+		IN AAAA   2001:db8:${DNSINDEX}::1
+ns		IN AAAA   2001:db8:${DNSINDEX}::1
+r${DNSINDEX}	IN AAAA   2001:db8:${DNSINDEX}::1
+www${DNSINDEX}	IN AAAA   2001:db8:${DNSINDEX}::1
+www		IN AAAA   2001:db8:${DNSINDEX}0::2
+__EOF__
