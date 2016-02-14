@@ -145,14 +145,19 @@ function stop {
 
 function clean { # logs, applications, ...
   stop
-  rm -f $HTTPDCONFDIR/pvd-httpd.conf
-  rm -rf $HTTPDPVD
-  rm -f $HTTPDHTML/index.html
-  rm -f $NAMEDCONFDIR/$NAMEDPVDZONEFILE
-  if [ -f $NAMEDCONFDIR/$NAMEDCONF.orig ]; then
-    cp $NAMEDCONFDIR/$NAMEDCONF.orig $NAMEDCONFDIR/$NAMEDCONF
+  if [ "$ROLE" = "C" ]; then
+    client_clean
+  else
+    rm -f $HTTPDCONFDIR/pvd-httpd.conf
+    rm -rf $HTTPDPVD
+    rm -f $HTTPDHTML/index.html
+    rm -f $NAMEDCONFDIR/$NAMEDPVDZONEFILE
+    if [ -f $NAMEDCONFDIR/$NAMEDCONF.orig ]; then
+      cp $NAMEDCONFDIR/$NAMEDCONF.orig $NAMEDCONFDIR/$NAMEDCONF
+    fi
   fi
-  client_clean
+  rm -rf $TMPDIR
+  ( cd $TESTAPPS && make clean )
 }
 
 # call function for given command

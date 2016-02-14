@@ -28,5 +28,4 @@ function client_stop {
 function client_clean {
   stop_client
   rm -f /etc/dbus-1/system.d/dbus-pvd-man.conf
-  ( cd $TESTAPPS && make clean )
 }

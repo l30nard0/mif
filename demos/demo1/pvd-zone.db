@@ -13,9 +13,9 @@ cat << __EOF__
 
 $DNSPVDZONE. IN NS ns.$DNSPVDZONE.
 
-		IN AAAA   2001:db8:${DNSINDEX}::1
-ns		IN AAAA   2001:db8:${DNSINDEX}::1
-r${DNSINDEX}	IN AAAA   2001:db8:${DNSINDEX}::1
-www${DNSINDEX}	IN AAAA   2001:db8:${DNSINDEX}::1
-www		IN AAAA   2001:db8:${DNSINDEX}0::2
+		IN AAAA   2001:db8:${IND}::1
+ns		IN AAAA   2001:db8:${IND}::1
+r${IND}		IN AAAA   2001:db8:${IND}::1
+www${IND}	IN AAAA   2001:db8:${IND}::1
+www		IN AAAA   2001:db8:${IND}0::2
 __EOF__
