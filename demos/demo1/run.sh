@@ -74,7 +74,11 @@ function start {
       if [ ! -f $NAMEDCONFDIR/$NAMEDCONF.orig ]; then
         cp $NAMEDCONFDIR/$NAMEDCONF $NAMEDCONFDIR/$NAMEDCONF.orig
       fi
-      source $DEMOHOME/bind_append.conf >> $NAMEDCONFDIR/$NAMEDCONF
+      # test if zone is already defined in $NAMEDCONF
+      grep $DNSPVDZONE < $NAMEDCONFDIR/$NAMEDCONF > /dev/null
+      if [ $? != 0 ]; then
+        source $DEMOHOME/bind_append.conf >> $NAMEDCONFDIR/$NAMEDCONF
+      fi
       source $DEMOHOME/pvd-zone.db > $NAMEDCONFDIR/$NAMEDPVDZONEFILE
       systemctl restart bind9.service
       echo "dns server started"

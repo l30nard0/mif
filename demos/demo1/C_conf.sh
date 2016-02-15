@@ -26,6 +26,6 @@ function client_stop {
 }
 
 function client_clean {
-  client_stop
+  #client_stop
   rm -f /etc/dbus-1/system.d/dbus-pvd-man.conf
 }
