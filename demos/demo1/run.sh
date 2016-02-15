@@ -45,9 +45,9 @@ function start {
   mkdir -p $TMPDIR
 
   # disable other connections (NetworkManager)
-  #if [ -n "$DEV0" ]; then
-  #  nmcli device disconnect $DEV0
-  #fi
+  if [ -n "$DEV0" ]; then
+    nmcli device disconnect $DEV0
+  fi
 
   if [ "$ROLE" = "C" ]; then
     client_start
@@ -120,9 +120,9 @@ function start {
 
 function stop {
   # enable other connections
-  #if [ -n "$DEV0" ]; then
-  #  nmcli device connect $DEV0
-  #fi
+  if [ -n "$DEV0" ]; then
+    nmcli device connect $DEV0
+  fi
 
   if [ "$ROLE" = "C" ]; then
     client_stop
