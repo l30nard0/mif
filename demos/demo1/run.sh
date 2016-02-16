@@ -89,7 +89,7 @@ function start {
       source $DEMOHOME/httpd.conf > $HTTPDCONFDIR/pvd-httpd.conf
       mkdir -p $HTTPDPVD
       source $DEMOHOME/pvd-info.json > $HTTPDPVD/pvd-info.json
-      source $DEMOHOME/index.html > $HTTPDHTML/index.html
+      source $DEMOHOME/index.html.tmpl > $HTTPDHTML/index.html
       systemctl restart apache2.service
       echo "web server started"
     fi
