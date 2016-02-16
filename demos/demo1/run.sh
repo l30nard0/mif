@@ -18,7 +18,7 @@ TMPDIR=$DEMOHOME/__mif_cache__
 TESTAPPS=$REPOROOT/testapps
 
 # get settings from node's configuration file
-source ./${ROLE}_conf.sh
+source $DEMOHOME/${ROLE}_conf.sh
 
 # dns server
 NAMEDCONFDIR=/etc/bind
