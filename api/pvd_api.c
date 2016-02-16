@@ -156,7 +156,17 @@ int pvd_activate ( const char *pvd_id, pid_t pid )
 		}
 		//printf ( "nsname=%s fd=%d setns=%d\n", nsname, fd, retval );
 		//printf ( "properties=%s\n", properties );
-	}
+/*
+		#define  RUNRES "/run/resolvconf/resolv.conf"
+		#define  RESOLVCONF     "/resolv.conf"
+		#define  NSRESOLVDIR    "/etc/netns/"
+		unlink ( RUNRES );
+		char *resolv = malloc ( strlen(NSRESOLVDIR) + strlen(ns) + strlen(RESOLVCONF));
+		strcpy ( resolv, NSRESOLVDIR );
+		strcat ( resolv, ns );
+		strcat ( resolv, RESOLVCONF );
+		symlink ( resolv, RUNRES );
+*/	}
 
 	g_variant_unref (value);
 

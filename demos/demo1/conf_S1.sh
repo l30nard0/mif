@@ -13,13 +13,15 @@ DEV1=eno33554984 # first device used in tests
 
 # IP addresses
 IP1="2001:db8:${IND}0::2"   # for DEV1
-IP1NET="$IP1/64"
+IP1NET="$IP1/32"
 
 # DNS
 STARTNAMED="yes"
 
-ROUTE1_ADD="/sbin/ip -6 route add 2001:db8::/32 via 2001:db8:${IND}0::1"
-ROUTE1_DEL="/sbin/ip -6 route del 2001:db8::/32 via 2001:db8:${IND}0::1"
+ROUTE1_ADD="/sbin/ip -6 route add 2001:db8:1::/48 via 2001:db8:10::1"
+ROUTE1_DEL="/sbin/ip -6 route del 2001:db8:1::/48 via 2001:db8:10::1"
+ROUTE2_ADD="/sbin/ip -6 route add 2001:db8:2::/48 via 2001:db8:20::1"
+ROUTE2_DEL="/sbin/ip -6 route del 2001:db8:2::/48 via 2001:db8:20::1"
 
 # pvd properties
 PVD_1_ID="implicit"

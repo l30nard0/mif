@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME="S2"
+NAME="R2"
 
 IND=2
 
@@ -10,24 +10,27 @@ IND=2
 #           DEV1, DEV2 - for tests, have assigned link-local IPv6 addresses
 DEV0=eno16777736 # device that should be turned off during tests
 DEV1=eno33554984 # first device used in tests
+DEV2=eno50332208 # second device usen in tests (empty if not used)
 
 # IP addresses
-IP1="2001:db8:${IND}0::2"   # for DEV1
-IP1NET="$IP1/64"
+IP1="2001:db8:${IND}::1"   # for DEV1
+IP2="2001:db8:${IND}0::1"  # for DEV2
+IP1NET="$IP1/48"
+IP2NET="$IP2/32"
 
 # DNS
 STARTNAMED="yes"
 
-ROUTE1_ADD="/sbin/ip -6 route add 2001:db8::/32 via 2001:db8:${IND}0::1"
-ROUTE1_DEL="/sbin/ip -6 route del 2001:db8::/32 via 2001:db8:${IND}0::1"
+# radvd configuration
+STARTRADVD="yes"
+PVD_1_ID="implicit"
+PVD_2_ID="f037ea62-ee4f-44e4-825c-16f2f5cc9b3e"
 
 # pvd properties
-PVD_1_ID="implicit"
 PVD_1_TYPE="[\"internet\", \"cellular\"]"
 PVD_1_NAME="Cellular internet access"
 PVD_1_BANDWITH="1 Mbps"
 PVD_1_PRICING="0,01 $/MB"
-PVD_2_ID="f037ea62-ee4f-44e4-825c-16f2f5cc9b3e"
 PVD_2_TYPE="[\"voice\", \"cellular\"]"
 PVD_2_NAME="Phone"
 PVD_2_BANDWITH="0,1 Mbps"

@@ -16,9 +16,10 @@ DEMOHOME=${0%/*}
 REPOROOT=$DEMOHOME/../..
 TMPDIR=$DEMOHOME/__mif_cache__
 TESTAPPS=$REPOROOT/testapps
+TMPLDIR=$DEMOHOME/templates
 
 # get settings from node's configuration file
-source $DEMOHOME/${ROLE}_conf.sh
+source $DEMOHOME/conf_${ROLE}.sh
 
 # dns server
 NAMEDCONFDIR=/etc/bind
@@ -77,26 +78,26 @@ function start {
       # test if zone is already defined in $NAMEDCONF
       grep $DNSPVDZONE < $NAMEDCONFDIR/$NAMEDCONF > /dev/null
       if [ $? != 0 ]; then
-        source $DEMOHOME/bind_append.conf >> $NAMEDCONFDIR/$NAMEDCONF
+        source $TMPLDIR/bind_append.conf >> $NAMEDCONFDIR/$NAMEDCONF
       fi
-      source $DEMOHOME/pvd-zone.db > $NAMEDCONFDIR/$NAMEDPVDZONEFILE
+      source $TMPLDIR/pvd-zone.db > $NAMEDCONFDIR/$NAMEDPVDZONEFILE
       systemctl restart bind9.service
       echo "dns server started"
     fi
 
     # web server
     if [ -n "$STARTHTTPD" ]; then
-      source $DEMOHOME/httpd.conf > $HTTPDCONFDIR/pvd-httpd.conf
+      source $TMPLDIR/httpd.conf > $HTTPDCONFDIR/pvd-httpd.conf
       mkdir -p $HTTPDPVD
-      source $DEMOHOME/pvd-info.json > $HTTPDPVD/pvd-info.json
-      source $DEMOHOME/index.html.tmpl > $HTTPDHTML/index.html
+      source $TMPLDIR/pvd-info.json > $HTTPDPVD/pvd-info.json
+      source $TMPLDIR/index.html.tmpl > $HTTPDHTML/index.html
       systemctl restart apache2.service
       echo "web server started"
     fi
 
     # radvd server
     if [ -n "$STARTRADVD" ]; then
-      source $DEMOHOME/radvd.conf > $TMPDIR/radvd.conf
+      source $TMPLDIR/radvd.conf > $TMPDIR/radvd.conf
       /usr/local/sbin/radvd -d 5 -n -C $TMPDIR/radvd.conf -m logfile -l $TMPDIR/radvd.log &
       echo "radvd started"
     fi

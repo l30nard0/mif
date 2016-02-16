@@ -1,0 +1,1 @@
+This script demonstrate/executes most test applications from testapps.

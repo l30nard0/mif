@@ -9,12 +9,12 @@ PVDMAN=$REPOROOT/pvdman
 
 function client_start {
   if [ ! -f /etc/dbus-1/system.d/dbus-pvd-man.conf ]; then
-    cp dbus-pvd-man.conf /etc/dbus-1/system.d/
+    cp $TMPLDIR/dbus-pvd-man.conf /etc/dbus-1/system.d/
   fi
   if [ -n "$DEV1" ]; then
-    python3 $PVDMAN/main.py -i $DEV1 2>$TMPDIR/pvdman-error.log 1> $TMPDIR/pvd-man.log &
+    python3 $PVDMAN/main.py -i $DEV1 > $TMPDIR/pvdman.log 2>&1  &
   else
-    python3 $PVDMAN/main.py 2>$TMPDIR/pvdman-error.log 1> $TMPDIR/pvd-man.log &
+    python3 $PVDMAN/main.py > $TMPDIR/pvdman.log 2>&1  &
   fi
   echo "mif-pvd man started"
   echo "start pvd-aware programs now"
