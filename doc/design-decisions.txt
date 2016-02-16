@@ -1,0 +1,79 @@
+Summary of design decisions used in this implementation
+
+1. Linux namespaces as PVD isolation mechanism
+2. Router Advertisement as PVD information delivery
+3. Python 3 with pyroute2 module
+4. IPv6 address family
+5. D-bus for communication with client MIF-aware applications
+6. MIF client API
+
+
+1. Linux namespaces as PVD isolation mechanism
+
+Single PVD resides within single PVD. This choice is discussed in design
+document (Modifications on Fedora to support MIF).
+
+
+2. Router Advertisement as PVD information delivery
+
+Since draft which proposes DHCP as second PVD information provider is withdrawn
+(IPR claims) only RAs are left.
+
+Service radvd is modified to carry PVD information, as per draft
+draft-ietf-mif-mpvd-ndp-support-02
+
+PVD informations are carried inside PVD container options.
+Each RA will contain all PVDs defined in radvd.conf.
+For PVD identity option only UUID [RFC4122] is used.
+Single PVD container must contain options related to only one PVD, and carry
+only one PVD identity option.
+
+
+3. Python 3 with pyroute2 module
+
+Pvd-manager and related modules (NDP client, pvd-server) that run as service on
+client are written in Python 3. Main module for manipulation of IP addresses and
+namespaces is pyroute2 (which like iproute2 uses netlink for kernel operations).
+
+NDP client extracts information from RAs:
+- parameters outside PVD container form "implicit" PVD which PVD identity is
+  generated from constant parameters (not timeouts) so that same parameters
+  always produce same PVD ID
+- parameters inside single PVD container produce single PVD
+- for each PVD gathered from RAs, pvd-manager is called to add this PVD or
+  update existing PVD with same ID
+
+Pvd-manager creates new namespace for each new PVD.
+
+Pvd-server listen on d-bus for client application requests for PVD informations.
+
+
+4. IPv6 address family
+
+Current implementation supports only IPv6. Since RAs are used, and they only
+carry IPv6 related informations, we started with IPv6 implementation.
+
+Required changes to add support for IPv4 (best guess):
+- PVD information delivery (options: DHCP, file from router, ...)
+- changes in pvd-manager to support both IPv6 and IPv4 (?!)
+- dual stack PVDs? (might not be too hard to implement ?!)
+
+
+5. D-bus for communication with client MIF-aware applications
+
+Client applications use MIF through MIF-api which uses d-bus interface for
+communication with mif-pvdmanager. Current implementation is developed
+for C programming language.
+
+
+6. MIF client API
+
+Current API include: pvd_get_by_id, pvd_get_by_properties and pvd_activate.
+However, operation "activate" just require PVD information and then next
+operations are performed without communication with pvd-manager.
+Therefore, only first two are realy required.
+
+API pvd_register_signal is in implementation phase. This API should be used to
+signal client application (through callback function) that change occured in
+PVD information. E.g. when a new PVD is created or existing removed, application
+will be notified about that event.

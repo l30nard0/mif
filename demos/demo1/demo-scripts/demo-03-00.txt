@@ -1,0 +1,14 @@
+This script demonstrate PvD aware applications that wants specific PvD defined
+by its properties. If such PvD doesn't exist, other PvD is searched with other
+(less restrictive) properties.
+
+For example, if free internet is available, an application can start downloading
+some large content (e.g. update). If free internet isn't available, application
+can choose to do some other low bandwith operations with remote server
+(e.g. synchronize contacts with ones stored on remote server).
+
+In this demo, "free" "internet" PvD is asked for first.
+If available, movie is streamed (or downloaded).
+If not available, "internet" PvD is asked for.
+If available, audio is streamed.
+If no PvD has "internet" type, error is printed.

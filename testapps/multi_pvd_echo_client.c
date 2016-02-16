@@ -27,6 +27,7 @@
 #include <pvd_api.h>
 
 #define MAXBUF 32
+#define ITER   20
 
 int open_socket (char *host, char *port, struct sockaddr **addr, socklen_t *len)
 {
@@ -65,7 +66,7 @@ int open_socket (char *host, char *port, struct sockaddr **addr, socklen_t *len)
 int main ( int argc, char **argv )
 {
 	char in_buf[MAXBUF], out_buf1[]="1", out_buf2[]="2";
-	int sock1, sock2, size;
+	int sock1, sock2, size, i, cnt1=0, cnt2=0;
 	socklen_t len1, len2;
 	struct sockaddr *server1, *server2;
 	char *pvd1, *host1, *port1, *pvd2, *host2, *port2;
@@ -96,8 +97,8 @@ int main ( int argc, char **argv )
 	if ( sock2 == -1 )
 		return -1;
 
-	/* send to both */
-	while (1) {
+	/* send to both ITER times */
+	for ( i = 1; i <= ITER; i++ ) {
 		size = sendto ( sock1, &out_buf1, strlen(out_buf1)+1, 0, server1, len1 );
 		if ( size < 0 ) { perror ("sendto"); return -1; }
 		size = sendto ( sock2, &out_buf2, strlen(out_buf2)+1, 0, server2, len2 );
@@ -109,13 +110,13 @@ int main ( int argc, char **argv )
 		if ( size < 0 )
 			perror("S1:recvfrom");
 		else
-			printf ( "S1:%s\n", in_buf );
+			printf ( "S1:%s (%d/%d)\n", in_buf, ++cnt1, i );
 
 		size = recv ( sock2, in_buf, MAXBUF, MSG_DONTWAIT );
 		if ( size < 0 )
 			perror("S2:recvfrom");
 		else
-			printf ( "S2:%s\n", in_buf );
+			printf ( "S2:%s (%d/%d)\n", in_buf, ++cnt2, i );
 	}
 
 	return 0;

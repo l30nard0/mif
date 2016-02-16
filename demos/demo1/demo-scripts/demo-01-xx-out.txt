@@ -1,0 +1,64 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_list
+Requesting all (*):
+id: eec252d9-6dcf-d320-1fb4-3a98cb26f9fe ns:mifpvd-1 iface:eno33554984
+properties: {"type": ["internet", "cellular"], "pricing": "0,01 $/MB", "id": "implicit", "bandwidth": "1 Mbps", "name": "Cellular internet access"}
+
+id: f037ea62-ee4f-44e4-825c-16f2f5cc9b3e ns:mifpvd-2 iface:eno33554984
+properties: {"type": ["voice", "cellular"], "pricing": "0,01 $/MB", "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e", "bandwidth": "0,1 Mbps", "name": "Phone"}
+
+id: bbffa8f5-0db3-5e6b-b585-c2ebd1a92af5 ns:mifpvd-3 iface:eno33554984
+properties: {"type": ["internet", "wired"], "pricing": "free", "id": "implicit", "bandwidth": "10 Mbps", "name": "Home internet access"}
+
+id: f037ea62-ee4f-44e4-825c-16f2f5cc9b3f ns:mifpvd-4 iface:eno33554984
+properties: {"type": ["iptv", "wired"], "pricing": "free", "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f", "bandwidth": "10 Mbps", "name": "TV"}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_get_by_id f037ea62-ee4f-44e4-825c-16f2f5cc9b3f
+Requesting pvd_id: f037ea62-ee4f-44e4-825c-16f2f5cc9b3f:
+id:f037ea62-ee4f-44e4-825c-16f2f5cc9b3f ns:mifpvd-4 iface:eno33554984
+properties: {"type": ["iptv", "wired"], "pricing": "free", "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f", "bandwidth": "10 Mbps", "name": "TV"}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_get_by_properties {"pricing": "free"}
+Requesting by properties: {"pricing": "free"}:
+id:bbffa8f5-0db3-5e6b-b585-c2ebd1a92af5 ns:mifpvd-3 iface:eno33554984
+properties: {"type": ["internet", "wired"], "pricing": "free", "id": "implicit", "bandwidth": "10 Mbps", "name": "Home internet access"}
+
+id:f037ea62-ee4f-44e4-825c-16f2f5cc9b3f ns:mifpvd-4 iface:eno33554984
+properties: {"type": ["iptv", "wired"], "pricing": "free", "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f", "bandwidth": "10 Mbps", "name": "TV"}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3f ip netns identify
+mifpvd-4
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3f ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default 
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+4: mifpvd@if3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN group default 
+    link/ether ca:72:ff:b6:e8:ce brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet6 2001:db8:1:2:c872:ffff:feb6:e8ce/64 scope global 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::c872:ffff:feb6:e8ce/64 scope link 
+       valid_lft forever preferred_lft forever
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_prop_run {"type": "internet", "pricing": "free"} wget http://[2001:db8:10::2] -P .././__mif_cache__
+--2016-02-16 21:27:12--  http://[2001:db8:10::2]/
+Connecting to [2001:db8:10::2]:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 149 [text/html]
+Saving to: ‘.././__mif_cache__/index.html.1’
+
+     0K                                                       100% 21,9M=0s
+
+2016-02-16 21:27:12 (21,9 MB/s) - ‘.././__mif_cache__/index.html.1’ saved [149/149]
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_prop_run {"type": "internet", "pricing": "free"} wget http://www.pvd1.org -P .././__mif_cache__
+--2016-02-16 21:27:12--  http://www.pvd1.org/
+Resolving www.pvd1.org (www.pvd1.org)... failed: Temporary failure in name resolution.
+wget: unable to resolve host address ‘www.pvd1.org’

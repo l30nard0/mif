@@ -9,7 +9,7 @@ TESTAPPS=$REPOROOT/testapps
 # compile apps
 ( cd $TESTAPPS && make > /dev/null 2>&1 )
 
-echo -e "\n"
+echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://[2001:db8:10::2]/swtrailer.mp4 -P $TMPDIR
 $TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://[2001:db8:10::2]/swtrailer.mp4 -P $TMPDIR
 

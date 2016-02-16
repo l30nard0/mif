@@ -1,0 +1,10 @@
+This script demonstrate PvD aware applications that wants specific PvD defined
+by its properties.
+
+*-req-free-internet: requests PvD which can reach Internt and its a free
+connection
+
+*-req-voice: request for PvD with type "voice"
+
+In both cases, if requested PvD isn't available, program fails (prints out
+error message).

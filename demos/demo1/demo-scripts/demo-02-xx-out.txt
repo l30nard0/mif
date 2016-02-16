@@ -1,0 +1,20 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_prop_run {"type": "internet", "pricing": "free"} wget http://[2001:db8:10::2]/swtrailer.mp4 -P .././__mif_cache__
+--2016-02-16 21:29:57--  http://[2001:db8:10::2]/swtrailer.mp4
+Connecting to [2001:db8:10::2]:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 12674416 (12M) [video/mp4]
+Saving to: ‘.././__mif_cache__/swtrailer.mp4.1’
+[...]
+2016-02-16 21:29:57 (36,8 MB/s) - ‘.././__mif_cache__/swtrailer.mp4.1’ saved [12674416/12674416]
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_prop_run {"type": "voice"} wget http://[2001:db8:20::2]/swtheme.mp3 -P .././__mif_cache__
+--2016-02-16 21:31:09--  http://[2001:db8:20::2]/swtheme.mp3
+Connecting to [2001:db8:20::2]:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 5251675 (5,0M) [audio/mpeg]
+Saving to: ‘.././__mif_cache__/swtheme.mp3.1’
+[...]
+2016-02-16 21:31:09 (32,6 MB/s) - ‘.././__mif_cache__/swtheme.mp3.1’ saved [5251675/5251675]
+

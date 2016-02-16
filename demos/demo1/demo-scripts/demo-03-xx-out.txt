@@ -1,0 +1,3 @@
+Output is similar to those in demo-02, but depending on availability of PvDs
+operation is like first one (download/stream movie) or like second one (audio)
+or error is printed if no PvD with type "internet" is available.

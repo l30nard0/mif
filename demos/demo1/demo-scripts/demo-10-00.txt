@@ -1,0 +1,6 @@
+This script demonstrate PvD aware applications simultaneously use more PvDs.
+
+In this example, an application communicates with an application on S1 within
+PvD1 and with application on S2 within PvD2.
+Communication is based on UDP. If server doesn't respond an error is printed
+but application continues.
