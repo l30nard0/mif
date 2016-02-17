@@ -1,11 +1,36 @@
-Scripts demo-20* demonstrate PVD aware application that tries to use best
-available connection - best by defined properties. If PVD with best properties
-isn't available, another is searched for, with next-to-best properties.
-While executing, if best PVD isn't used, periodically re-check if best PVD
-became available.
+For this script prepare newtork setup as shown in demo-00-00-readme.txt.
 
-Echo servers are started on S1 and S2.
-Script demo-20-01-R1-on-off.sh periodically starts and stops services on R1
-(and set and delete IP addresses used in this setup). Since R1 offers best PVD
-(for this test application - pvd_echo_client) when R1 is stopped, application
-will switch to R2 to reach to server on the Internet (S1).
+Scripts demo-20* use program "pvd_echo_client" (from testapps).
+
+Program "pvd_echo_client" tries to reach service on server S1 ("on Internet")
+using best possible connection:
+1. if PVD with "internet" + "free" is available use it first
+2. if "internet" + "free" isn't available, search for PVD with "internet"
+3. if PVD with "internet" isn't available retry and retry ...
+4. if "internet" + "free" PVD isn't used, periodically (each 15 iterations)
+   refresh PVD list and check if such PVD reapeared
+
+When multiple PVDs are available, program also (as info only) prints a list
+of all available PVDs. This is helpful because it shows when some PVD appeared
+or dissapeared from system (pvdman).
+
+Using this program several system properties are shown:
+- adaptable MIF aware application
+  * choose best PVD available
+  * recheck for better PVD periodically
+- dynamical addition and deletion of PVDs
+  * pvdman periodically pings routers: when no response all its PVDs are removed
+- operations with network interfaces and namespaces (with python) slows down
+  system drastically (only when operations are performed)
+- implementation has bugs :(
+
+Results from one run are presented and commented in "demo-20-xx-out-0.txt".
+
+Script "demo-20-02-C-pvd-retry.sh" is used to start "pvd_echo_client".
+$ sudo ./demo-20-02-C-pvd-retry.sh
+
+Script "demo-20-01-R-start-stop.sh" can be used to automate test on routers.
+$ sudo ./demo-20-01-R-start-stop.sh start -- will start services on router
+$ sudo ./demo-20-01-R-start-stop.sh stop  -- will stop services on router and
+  also disable interface which connect it to client (so that pvdman can detect
+  that router is offline)

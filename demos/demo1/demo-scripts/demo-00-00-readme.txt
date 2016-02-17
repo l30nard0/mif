@@ -1,7 +1,7 @@
 Demos in this directory should be run on network setup described in readme.txt
 from previous directory.
 
-Required changes for demo-20* and next ones
+Required changes for demo-20* (and next ones)
 - put R2 and S2 network on same virtual network as R1 and S1 (VMnet3)
 
                   PvD1
@@ -17,3 +17,10 @@ Required changes for demo-20* and next ones
                   P:2::1/48 |      | :20::1 :20::2 |      |
                             +------+               +------+
                   PvD2                     <---- Internet ---->
+
+
+Each demo has (short) description within "demo-NN-00.txt".
+
+Scripts for running are named: "demo-NN-MM-<on-host>-<what-it-do>.sh"
+
+Sample output (sometimes with comments) are saved in "demo-NN-xx-out.txt".

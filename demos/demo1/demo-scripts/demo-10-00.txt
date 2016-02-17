@@ -1,4 +1,4 @@
-This script demonstrate PvD aware applications simultaneously use more PvDs.
+This script demonstrate PvD aware application that simultaneously use two PvDs.
 
 In this example, an application communicates with an application on S1 within
 PvD1 and with application on S2 within PvD2.

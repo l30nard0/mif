@@ -1,0 +1,198 @@
+Comments are on the far right side >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> HERE
+
+$ sudo ./demo-20-02-C-pvd-retry.sh
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: ./pvd_echo_client 2001:db8:10::2 20000
+Trying next ...                                                                 No PVDs in client
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-1                       PVD arrive in the system (router R2 sends them)
+S:recvfrom: Resource temporarily unavailable                                    However, it takes some time to get setup
+Retrying...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-1                       Finally, PVD is operational
+1 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)        Message (pvds in system *) is printed with a helper function that
+2 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)        doesn't interfere with main loops of program.
+3 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)        It will detect change in available PVDs, but program will check that
+4 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)        only in main loop (at beginning).
+5 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+6 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+7 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+8 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+9 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+10 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+11 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+12 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+13 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+14 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+15 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+Trying next ...                                                                 Since this isn't optimal PVD every 15 iterations retry to get better PVD
+Connected with properties {"type":"internet"} to mifpvd-1                       No better one, using "best of the rest"
+16 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+17 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+18 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+19 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+20 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+21 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+22 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+23 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+24 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+S:recvfrom: Resource temporarily unavailable                                    Router R2 goes down
+Retrying...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-1                       pvdman isn't yet aware of this problem (he pings router(s) periodically)
+S:recvfrom: Resource temporarily unavailable
+Retrying...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-1
+S:recvfrom: Resource temporarily unavailable
+Retrying...
+Trying next ...                                                                 pvdman detected router R" not responding - removes PVDs
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-3                       PVD arrive in the system (again R2's)
+S:recvfrom: Resource temporarily unavailable                                    but not ready yet
+Retrying...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-3
+25 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)       Operational
+26 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+27 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+28 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+29 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+30 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+Trying next ...                                                                 15th iteration (hmm, could have reset counter also on "resource unavailable")
+Connected with properties {"type":"internet"} to mifpvd-3
+31 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+32 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+33 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+34 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+35 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+36 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+37 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+38 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+39 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+40 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+41 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+42 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+43 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+44 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+45 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-3
+46 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+47 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+48 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+49 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+50 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+51 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+52 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+53 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)       New PVDs in the system (R1). However, program is not aware yet of them.
+54 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+55 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+56 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+57 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+58 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+59 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+60 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-5                                     After 15th iteration, mail loop is repeated,
+61 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)   best PVD is used ("internet" + "free" from R1)
+62 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+63 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+64 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+65 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+66 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+67 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+68 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+69 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+70 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+71 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+72 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+73 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+74 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+75 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+76 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+77 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+78 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+79 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+80 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+81 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+82 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+83 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+84 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+85 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+86 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+87 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+88 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+89 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+90 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+91 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+92 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+93 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+94 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+95 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+96 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+97 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+98 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+99 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+100 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+101 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+102 using mifpvd-5 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+S:recvfrom: Resource temporarily unavailable                                                                     Router R1 goes down
+Retrying...
+Connected with properties {"type":"internet"} to mifpvd-3
+103 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)                     Client detects that mifpvd-5 isn't operational
+104 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)                     and uses next "best one".
+105 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+106 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-5 mifpvd-6)
+107 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4 mifpvd-6)
+108 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)                                       pvdman detected R1 down, removed PVDs
+109 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+110 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+111 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+112 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+113 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+114 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+115 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+116 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+117 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-3
+118 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+119 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+120 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+121 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+122 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+123 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+124 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+125 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+126 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+127 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+128 using mifpvd-3 {"type":"internet"} (pvds in system: mifpvd-3 mifpvd-4)
+S:recvfrom: Resource temporarily unavailable                                    R2 goes down
+Retrying...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-3
+S:recvfrom: Resource temporarily unavailable
+Retrying...
+Error invoking get_by_properties(): Timeout was reached                         Some kind of BUG. Probably race condition somewhere (in .py files, on pvdman service)
+**
+GLib:ERROR:/build/glib2.0-G_esY6/glib2.0-2.46.1/./glib/gvarianttypeinfo.c:184:
+g_variant_type_info_check: assertion failed: (0 <= index && index < 24)
+./demo-20-02-C-pvd-retry.sh: line 14:  2940 Aborted
+(core dumped) $TESTAPPS/pvd_echo_client 2001:db8:10::2 20000
+$

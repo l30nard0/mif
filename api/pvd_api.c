@@ -20,6 +20,8 @@
 #define  INTERFACE_NAME "org.freedesktop.PvDManager"
 #define  NSFILEBASEDIR  "/var/run/netns/"
 
+#define  NUMRETRY       3
+
 static GDBusConnection *connect ()
 {
 	GDBusConnection *connection;
@@ -38,22 +40,29 @@ GVariant *pvd_call_method ( char *method_name, GVariant *params, const GVariantT
 	GDBusConnection *connection;
 	GError *error;
 	GVariant *value;
+	int i;
 
-	connection = connect ();
-	if ( connection == NULL )
-		return NULL;
-
-	error = NULL;
-	value = g_dbus_connection_call_sync (
-		connection, BUS_NAME, OBJECT_PATH, INTERFACE_NAME,
-		method_name, params, ret_type,
-		G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error
-	);
-
-	if (value == NULL)
+	for ( i = 0; i < NUMRETRY; i++ ) //pvdman might be unresponsive when doing stuff
 	{
-		g_printerr ("Error invoking %s(): %s\n", method_name, error->message);
-		g_error_free (error);
+		connection = connect ();
+		if ( connection == NULL )
+			continue;
+
+		error = NULL;
+		value = g_dbus_connection_call_sync (
+			connection, BUS_NAME, OBJECT_PATH, INTERFACE_NAME,
+			method_name, params, ret_type,
+			G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error
+		);
+
+		if (value == NULL)
+		{
+			g_printerr ("Error invoking %s(): %s\n", method_name, error->message);
+			g_error_free (error);
+		}
+		else {
+			break;
+		}
 	}
 
 	g_object_unref(connection);
@@ -165,11 +174,29 @@ int pvd_activate ( const char *pvd_id, pid_t pid )
 		strcpy ( resolv, NSRESOLVDIR );
 		strcat ( resolv, ns );
 		strcat ( resolv, RESOLVCONF );
-		symlink ( resolv, RUNRES );
-*/	}
+		symlink ( resolv, RUNRES );*/
+
+		free(nsname);
+	}
 
 	g_variant_unref (value);
 
+	return retval;
+}
+
+/* switch to default namespace */
+int pvd_reset ()
+{
+	int retval = -1;
+	int fd = open ( "/proc/1/ns/net", O_RDONLY );
+	if ( fd != -1 ) {
+		retval = setns ( fd, CLONE_NEWNET );
+		if ( retval == -1 )
+			perror("setns");
+	}
+	else {
+		perror("open: /proc/1/ns/net");
+	}
 	return retval;
 }
 

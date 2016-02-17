@@ -27,15 +27,16 @@
 #include <time.h>
 #include <pvd_api.h>
 
-#define MAXBUF 32
-#define ITER   100
+#define MAXBUF      32
+#define ITER        200
+#define ITER_RETRY  15
 
 #define PREF1 "{\"type\":\"internet\", \"pricing\":\"free\"}"
 #define PREF2 "{\"type\":\"internet\"}"
 
-char *pvd_prefs[] = { PREF1, PREF2, NULL };
+static char *pvd_prefs[] = { PREF1, PREF2, NULL };
 
-int open_socket (char *host, char *port, struct sockaddr **addr, socklen_t *len)
+static int open_socket (char *host, char *port, struct sockaddr **addr, socklen_t *len)
 {
 	struct addrinfo hints, *res, *ressave;
 	int sockfd, status;
@@ -69,10 +70,12 @@ int open_socket (char *host, char *port, struct sockaddr **addr, socklen_t *len)
 	return sockfd;
 }
 
+static void list_all_pvds ();
+
 int main ( int argc, char **argv )
 {
 	char in_buf[MAXBUF], out_buf[]="1";
-	int sock, size, i, cnt=0, iter, iter2;
+	int sock, size, i, iter, iter2;
 	socklen_t len;
 	struct sockaddr *server;
 	char *host, *port, *pvd_id;
@@ -93,11 +96,13 @@ int main ( int argc, char **argv )
 	while ( iter <= ITER )
 	{
 		if ( sock == -1 ) {
+			pvd_reset();
 			while (1) { // ; pvd_prefs[i] != 0; i++ ) {
 				if ( t == time(NULL) ) {
 					fprintf ( stderr, "Trying next ...\n" );
 					sleep(1);
 				}
+				t = time(NULL);
 				i++;
 				if ( pvd_prefs[i] == NULL )
 					i = 0; //restart from beginning
@@ -138,11 +143,13 @@ int main ( int argc, char **argv )
 			fprintf ( stderr, "Retrying...\n" );
 		}
 		else {
-			printf ( "S:%s (%d/%d)\n", in_buf, ++cnt, iter );
+			printf ( "%d using %s %s", iter, pvd[0]->ns, pvd_prefs[i] );
+			list_all_pvds();
+
 			iter++;
 			if ( i > 0 ) { //not best connection
 				iter2++;
-				if ( iter2 >= ITER/10 ) { //retry with best connection
+				if ( iter2 >= ITER_RETRY ) { //retry with best connection
 					close(sock);
 					sock = -1;
 					iter2 = 0;
@@ -153,4 +160,26 @@ int main ( int argc, char **argv )
 	close (sock);
 
 	return 0;
+}
+
+static void list_all_pvds ()
+{
+	int i = 0;
+	struct pvd **pvd;
+
+	pvd = pvd_get_by_id ( "*" );
+	if (!pvd)
+		return; //error connecting to dbus service
+
+	printf ( " (pvds in system:" );
+	for (i = 0; pvd[i] != NULL; i++) {
+		printf (" %s", pvd[i]->ns );
+		free(pvd[i]->id);
+		free(pvd[i]->ns);
+		free(pvd[i]->iface);
+		free(pvd[i]->properties);
+		free(pvd[i]);
+	}
+	free(pvd);
+	printf ( ")\n" );
 }
