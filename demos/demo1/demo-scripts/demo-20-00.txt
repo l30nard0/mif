@@ -1,0 +1,11 @@
+Scripts demo-20* demonstrate PVD aware application that tries to use best
+available connection - best by defined properties. If PVD with best properties
+isn't available, another is searched for, with next-to-best properties.
+While executing, if best PVD isn't used, periodically re-check if best PVD
+became available.
+
+Echo servers are started on S1 and S2.
+Script demo-20-01-R1-on-off.sh periodically starts and stops services on R1
+(and set and delete IP addresses used in this setup). Since R1 offers best PVD
+(for this test application - pvd_echo_client) when R1 is stopped, application
+will switch to R2 to reach to server on the Internet (S1).

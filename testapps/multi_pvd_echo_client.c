@@ -73,7 +73,8 @@ int main ( int argc, char **argv )
 
 	if ( argc != 7 ) {
 		printf ( "usage: multi_pvd_echo_client "
-				"pvd1 server1 port1 pvd2 server2 port2\n" );
+				"<pvd-1> <remote-address-1> <remote-port-1>"
+				"<pvd-2> <remote-address-2> <remote-port-2>\n" );
 		return -1;
 	}
 	pvd1 = argv[1]; host1 = argv[2]; port1 = argv[3];
@@ -118,6 +119,8 @@ int main ( int argc, char **argv )
 		else
 			printf ( "S2:%s (%d/%d)\n", in_buf, ++cnt2, i );
 	}
+	close (sock1);
+	close (sock2);
 
 	return 0;
 }

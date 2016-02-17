@@ -22,7 +22,7 @@ int main ( int argc, char *argv[] )
 	char *pvd_id;
 
 	if ( argc < 2 ) {
-		fprintf ( stderr, "Usage: %s <properties> <command> [arguments]\n",
+		fprintf ( stderr, "Usage: %s <properties> <command> [<arguments>]\n",
 				argv[0]);
 		return -1;
 	}

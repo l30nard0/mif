@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 		port=argv[2];
 	}
 	else {
-		printf ( "usage: echo_server <local-host-name-ip> <local-port>\n" );
+		printf ( "usage: echo_server <local-address> <local-port>\n" );
 		return -1;
 	}
 
