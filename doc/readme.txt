@@ -1,5 +1,5 @@
-PvD architecture overview / implementation details
-===================================================
+PvD architecture overview / implementation details (work in progress)
+=====================================================================
 This document describes a proof-of-concept implementation of provisioning domain
 (PvD) aware client-side network management component (MIF-pvdman). The source
 code is available at https://github.com/dskvorc/mif-pvdman.
@@ -8,7 +8,9 @@ Contents
 --------
 1. Architecture Overview and Implementation Details
 2. PvD Properties
-3. Overview of Test Environment
+3. Overview of Development Environment
+4. Summary of design decisions used in implementation
+5. TODO list
 
 1. Architecture Overview and Implementation Details
 ---------------------------------------------------
@@ -100,105 +102,190 @@ With RA messages routers provides network relate parameters for PvDs.
 Other parameters (in this "draft" called "properties") are also provided by
 router, but only on request, using HTTP protocol on router's link-local address.
 
-Upon receiving PvD information from router, MIF-pvdman tries to get file with
-PvD properties from the same router. If such file exist, network related PvD
+Upon receiving PvD information from router, MIF-pvdman tries to get a file with
+PvD properties from the same router. If such file exists, network related PvD
 parameters are extended with ones (properties) from received file.
 
 Client application receives all those additional properties on request, and may
-request only those PvDs that match on requested property.
+select appropriate PvD based on them.
 
-Current implementation is very rudimentary: files on router are in JSON format;
-MIF-pvdman interpret them (because its written in Python and using JSON is easy,
-while client applications are written in C).
-In real implementation this should be reversed (only client should interpret
-file with PvDs' properties).
+Current implementation is very rudimentary: files on router are in JSON format.
+MIF-pvdman interpret them - create a dcitionary of them, but only because
+MIF-pvdman its written in Python and using JSON is easy, while client
+applications are written in C. In real implementation this should be reversed -
+only client should interpret file with PvDs' properties.
 
-Properties used in this example are just an example (name, type, bandwith, price).
+Properties used in this prototype are just an example (name, type, bandwith,
+price), not to be used in some protocol specification.
 The idea is to present mechanism to provide additional PvD properties obtained
 by some mechanism (not by RAs) and let client application decide what to do with
-them. Defining elements of properties is some IETF WG job, or it should be left
-undefined (using specific properties in different environments).
+them.
 
 Examples for PvD properties:
 [
     {
 		"name": "Home internet access",
-		"type": ["general", "wired"],
+		"type": ["internet", "wired"],
 		"id": "implicit",
-		"bandwidth": "1 Mbps",
+		"bandwidth": "10 Mbps",
 		"pricing": "free"
 	},
 	{
 		"name": "voip",
-		"type": ["voip"],
-		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
-		"bandwidth": "10 Mbps",
-		"pricing": "0,01 $/MB"
-	},
-	{
-		"name": "TV",
 		"type": ["iptv", "wired"],
-		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
+		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
 		"bandwidth": "10 Mbps",
 		"pricing": "free"
 	},
 	{
+		"name": "Cellular internet access",
+		"type": ["internet", "cellular"],
+		"id": "implicit",
+		"bandwidth": "1 Mbps",
+		"pricing": "0,01 $/MB"
+	},
+	{
 		"name": "Internet access over Lucy's phone",
 		"type": ["general", "cellular"],
-		"id": "implicit",
-		"bandwidth": "10 Mbps",
+		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
+		"bandwidth": "0,1 Mbps",
 		"pricing": "0,01 $/MB"
 	}
 ]
 
 
-3. Overview of Test Environment
-----------------------------------
+3. Overview of Development Environment
+--------------------------------------
 Prototype system implementation described above is implemented and tested on
-Linux/Fedora 23 and Linux/Ubuntu 14.04. Test environment consists of two
+Linux/Fedora 23 and Linux/Lbuntu 15.10. Test environment consists of minimum two
 machines, one being a router running radvd, while another being a regular host
-running MIF-pvdman and client applications. In our experiments, we used two
-virtual machines hosted in VMware Player.
+running MIF-pvdman and client applications. Additional routers and "servers"
+behind routers are used in some demonstrations.
+In our experiments, we used virtual machines hosted in VMware Player.
 
 Services on routers (Rx) and servers (Sx):
 - radvd (PvD-aware NDP server) (only on routers):
   * https://github.com/dskvorc/mif-radvd
 - web server (httpd, apache2)
 - DNS server (bind)
+- test applications (echo_server, ...)
 
-Service on client - MIF-PvD:
-- https://github.com/dskvorc/mif-pvdman
-- start with scripts in "demos" or with sudo python3 main.py
-  * (requires python3 + netaddr + pyroute2 modules)
-- NDP client (ndpclient.py):
-  * send RS request (on startup)
-  * listen for RAs
-  * from RAs creates implicit and explicit pvd information,
-    and send them to pvdman
-- PvD Manager (pvdman.py):
-  * keeps PvD data
-  * creates PvDs: namespaces, interfaces
-  * updates PvDs with new parameters
-- dbus service (pvdserver.py):
-  * responds to dbus requests from clients (applications on localhost)
+Service on client - MIF-pvdman:
+- directory "pvdman"
+- requires python3 + netaddr + pyroute2 modules
+- MIF-pvdman modules:
+  * main.py
+    - start services, connects modules, respond on events
+    - start with: sudo python2 main.py [-i <interface-name>]
+  * pvdman.py
+    - keeps and manages PvD data
+    - creates/updates PvDs on demand
+  * ndpclient.py
+    - listen for RAs (sends RS on startup)
+    - from received RAs create PvDs calling pvdman.py's setPvd
+  * pvdserver.py
+    - responds to d-bus requests from client applications and sends them PvD
+      information back
 
-Application API:
-- https://github.com/dskvorc/mif-pvdman/api
-- api - library with client side API
-  * uses dbus to connect to PvD Manager
-  * methods: pvd_get_by_id, pvd_get_by_properties, pvd_activate
-  * (requires glib2-devel package (libglib2-devel on fedora))
-- API is used to select "current" PvD: all next network related operations
-  will use that PvD (unless they were initialized before, in different PvD)
-  until different PvD is selected
+Legacy, PvD unaware application:
+- for it to use PvDs it should be started with:
+  * ip netns exec:
+    $ ip netns exec <namespace-name> <application-name> [arguments...]
+  * or MIF launchers pvd_run or pvd_prop_run:
+    $ sudo ./pvd_run <pvd-id> <application-name> [arguments...]
+    $ sudo ./pvd_prop_run <req-properties> <application-name> [arguments...]
 
-Test applications:
-- in "testapps"
-- pvd_list, pvd_run, pvd_prop_run, ...
-- usage: sudo ./<prog> [arguments]
+MIF aware applications on client:
+- use C API, directory "api"
+- sample application in directory "testapps"
+- client side API:
+  * written for C programming language
+  * requires glib2-devel package
+  * uses d-bus to connect to MIF-pvdman (module pvdserver.py)
+  * methods:
+    - pvd_get_by_id - get a list of PvDs which id contains given string
+    - pvd_get_by_properties - get a list of PvDs which have requested properties
+    - pvd_activate:
+      * get PvD with given id
+      * save information about which PvDs are used (this isn't implemented yet;
+        is it required/useful?)
+      * switch calling thread (process) into given PvD (namespace)
+    - pvd_reset - switch application back to default namespace (not managed by
+      MIF-pvdman)
+- using API:
+  * pvd_activate (and possibly pvd_get_by_id/pvd_get_by_properties before it)
+    - before socket is opened, and before other network related operations like
+      getaddrinfo, gethostbyname and similar that preceed "socket" a PvD must be
+      selected with pvd_activate
+    - additional socket control operations like bind/setsockopt can be used then
+  * if required, another socket can be opened in same/another PvD
+  * as long as PvDs socket was created in is operational, other send/receive
+    operations on that socket should work as expected
+- test applications:
+  * some test applications are implemented in "testapps"
+  * pvd_list, pvd_run, pvd_prop_run, ...
+  * usage: sudo ./<prog> [arguments]
+
+Test Case:
+- test cases and results are presented in directory "demos"
 
 
-Test Case
----------
-Test cases and results are presented in "demos" with configuration
-and scripts and little documentation (start with readme.txt).
+4. Summary of design decisions used in implementation
+
+- Linux namespaces as PvD isolation mechanism
+  * Single PvD resides within single PvD. This choice is discussed in design
+    document (Modifications on Fedora to support MIF).
+- Router Advertisement as PvD information delivery
+  * Since draft which proposes DHCP as second PvD information provider is
+    withdrawn (IPR claims) only RAs are left.
+  * Service radvd is modified to carry PvD information, as per draft
+    draft-ietf-mif-mpvd-ndp-support-02
+  * Explicit PvD information is carried inside PvD container options.
+  * Each RA will contain all PvDs defined in radvd.conf.
+  * For PvD identity option UUID [RFC4122] is used.
+  * Single PvD container must contain options related to single PvD, and must
+    carry single PvD identity option.
+  * Parameters outside PvD container form "implicit" PvD with PvD identity that
+    is generated from constant parameters (not timeouts) so that same
+    parameters always produce same PvD ID.
+- Python 3 with pyroute2 module for MIF-pvdman
+  * Python 3 is chosen for rapid prototyping
+  * module pyroute2 is used for most network related operations
+- IPv6 address family
+  * since RAs are used, implementation is started for IPv6
+  * adding support for IPv4 would require (best guess):
+    - PvD information with IPv4 network parameters (DHCP, file from router, ...)
+    - changes in MIF-pvdman
+    - dual stack PvDs
+- D-bus for communication with client MIF-aware applications
+  * why:
+    - d-bus is "popular" choice for communication with system services
+    - NetworkManager uses d-bus (if this implementation is to be merged with it)
+  * MIF-pvdman offer services
+  * MIF-aware application call services (using prived API from "api")
+- API
+  * pvd_get_by_id
+  * pvd_get_by_properties
+  * pvd_activate
+
+
+5. TODO list
+
+- PvD information delivery
+  * RA/RS options:
+    - each RA delivers all PvD information (current implementation)
+    - RA just indicate that he has PvD information - delivery on request
+    - ...
+  * DHCP
+  * ?
+- MIF-pvdman
+  * IPv4
+  * ...
+- API
+  * permission to switch namespace to user application
+    - probably requires a little kernel modification
+  * signal client about change in PvDs on the system
+    - implementation in progress
+  * change which resolv.conf is used (should be: /etc/netns/<ns-name/resolv.conf)
+    - change glibc? library
+    - track what "ip netns exec" do (mount something) and do it in api
