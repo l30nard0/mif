@@ -10,6 +10,7 @@ Contents
 2.2. Mobility
 2.1.3. Example from RFC7566: 4.1. A Mobile Node (page 11)
 2.3. Application preference
+2.4. Multi PvD applications
 
 
 1. Network setup
@@ -21,35 +22,41 @@ routers R1 and R2 and two servers S1 and S2. Routers and servers have
 static address configuration (as shown on Figure 1, set up with demo scripts).
 (All nodes in test environment were virtual machines running Lubuntu 15.10.)
 
-For reducing image size prefix 2001:db8 is replaced with P.
 
-                +------------------------------------------------+
-                | PvD1                      DNS domain: pvd1.org |
-                |           +------+                  +------+   |
-                | P:1::1/48 |      | P:10::1  P:10::2 |      |   |
-             +--+---------o-+  R1  +-o--------------o-+  S1  |   |
-             |  |           |      |    [VMnet3]      |      |   |
-             |  |           +------+                  +------+   |
-+--------+   |  |        www1.pvd1.org              www.pvd1.org |
-|        |   |  +------------------------------------------------+
-| Client +-o-+  [VMnet2]
-|        |   |  +------------------------------------------------+
-+--------+   |  | PvD2                      DNS domain: pvd2.org |
-             |  |           +------+                  +------+   |
-             |  | P:2::1/48 |      | P:20::1  P:20::2 |      |   |
-             +--+---------o-+  R2  +-o--------------o-+  S2  |   |
-                |           |      |    [VMnet4/3]    |      |   |
-                |           +------+                  +------+   |
-                |        www2.pvd2.org              www.pvd2.org |
-                +------------------------------------------------+
+                             +------+                                   +------+
+             2001:db8:1::1/48|      |2001:db8:10::1/32 2001:db8:10::2/32|      |
+             +-------------o-+  R1  +-o-------------------------------o-+  S1  |
++--------+   |               |      |        :     [VMnet3]             |      |
+|        |   |               +------+        :                          +------+
+| Client +-o-+ [VMnet2]                      : (for some tests this is linked)
+|        |   |               +------+        :                          +------+
++--------+   |               |      |        :     [VMnet4]             |      |
+             +-------------o-+  R2  +-o-------------------------------o-+  S2  |
+             2001:db8:2::1/48|      |2001:db8:20::1/32 2001:db8:20::2/32|      |
+                             +------+                                   +------+
 
                 Figure 1. Network configuration in demo
 
+PvDs are identified by their ID. However, since this used ID is UUID (must be
+unique) in this text shorter names are used as identifiers. For example name
+R1-PvD1 refers to first PvD provided by R1 (first is usually implicit).
+Real ID of this PvD will be different. Namespace created for this PvD will be in
+named "mifpvd-x" where "x" might be 1, 2, 3, ...
+
+PvDs are defined for radvd servers as follows (*PvD1 implicit, *PvD2 explicit):
+R1-PvD1: 2001:db8:1:1::/64 {"type":["internet", "wired"],    "bandwidth":"10 Mbps", "pricing":"free" }
+R1-PvD2: 2001:db8:1:2::/64 {"type":["iptv", "wired"],        "bandwidth":"10 Mbps", "pricing":"free" }
+R2-PvD1: 2001:db8:2:1::/64 {"type":["internet", "cellular"], "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
+R2-PvD2: 2001:db8:2:2::/64 {"type":["voice", "cellular"],    "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
+
 Services on hosts:
-Client: pvdmanager (pvdman) + custom created applications (testapps)
+Client: MIF-pvdman + custom created applications (testapps)
 R1, R2: radvd, DNS server (bind), web server (apache2) + custom apps
 S1, S2: DNS server (bind), web server (apache2) + custom apps
 Configuration for DNS and web are same for R1 and S1, and for in R2 and S2.
+Routes for S1 and S2:
+- 2001:db8:1::/48 via 2001:db8:10::1 (for S2 only when VMnet4 == VMnet3)
+- 2001:db8:2::/48 via 2001:db8:20::1 (for S1 only when VMnet4 == VMnet3)
 
 Configuration is setup via scripts. For example for R1:
 - R1_conf.sh (R1 settings; settings are saved in environment variables)
@@ -106,7 +113,7 @@ PvD2 for reaching specific Video-on-Demand Service (Figure 2).
 
                          +-------------------+
                          | +-----------------+-------------+
-                         | | PVD1 +------+   |    +------+ |
+                         | | PvD1 +------+   |    +------+ |
                   (PC) +-+-+----o-+  R1  +-o-+--o-+  S1  | | (Internet)
                        | | |      +------+   |    +------+ |
           +--------+   | | +-----------------+-------------+
@@ -121,10 +128,11 @@ PvD2 for reaching specific Video-on-Demand Service (Figure 2).
 
    Figure 2. Simulating Home Network and a Network Operator with Multiple PvDs
 
-In simulation only router R1 can be used, or both R1 and R2 could be used (one
-for Internet connectivity and other for Video-on-Demand).
+Script for demonstrattion:
+- demo-01-01-C-run-testapps.sh (parts of)
+- demo-02-01-C-req-free-internet.sh
+- demo-02-02-C-req-voice.sh
 
-Script FIXME started on client FIXME ...
 
 2.1.2. Example from RFC7566: 4.2. A Node with a VPN Connection (page 12)
 
@@ -149,6 +157,9 @@ Script FIXME started on client FIXME ...
 
            Figure RFC7566-2: An Example of PvD Use with VPN
 <<<<
+
+TODO (working on it)
+
 After establishing VPN connection separate PvD could be created for VPN.
 Private Services accessible through this PvD, possibly using local address,
 could even have same addresses as local hosts (connected to the same Home
@@ -158,7 +169,7 @@ accessing Internet or local hosts.
 
                          +-------------------+
                          | +-----------------+-------------+
-                         | | PVD1 +------+   |    +------+ |
+                         | | PvD1 +------+   |    +------+ |
               (Phy-IF) +-+-+----o-+  R1  +-o-+--o-+  S1  | | (Internet)
                        | | |      +------+   |    +------+ |
           +--------+   | | +-----------------+-------------+
@@ -173,7 +184,7 @@ accessing Internet or local hosts.
 
             Figure 3. Simulating a Node with a VPN Connection
 
-Script FIXME started on client FIXME ...
+Scripts TODO
 
 
 2.2. Mobility
@@ -207,16 +218,13 @@ use cellular connection through mobile phone (phone could also be a client).
 <<<<
 Although Client from Figure 1 have single interface, availability of PvDs from
 routers R1 and R2 can simulate presence or absence of Wi-Fi signal.
-S1 and S2 represent services on Internet. Although S1 is reachable only through
-R1 and S2 only through S2 this part of network is behind routers and
-"irrelevant" for Client. In similar network setup, S1 (and/or S2) could be
-connected to both R1 and R2. Then simulation will be more like in presented
-example even on "Internet" side.
+S1 and S2 represent services on Internet. For this test network from Figure 1
+should be modified so that VMnet3 and VMnet4 are the same network (VMnet3).
 
                                            .....................
                                            :                   :
                         ...................................... :
-                        : PVD1 +------+    :        +------+ : :
+                        : PvD1 +------+    :        +------+ : :
              (Wi-Fi) +-------o-+  R1  +-o----+----o-+  S1  | : :
                      |  :      +------+    : |      +------+ : :
         +--------+   |  :..................:.|...............: :
@@ -233,11 +241,13 @@ example even on "Internet" side.
 
 R2 simulate availability of Mobile 'Internet' (which should be always
 available), while R1 can simulate Wi-Fi router (which isn't always available).
-Enabling and disabling of R1 interface with IP address P:1::1/48 presence or
-absence of Wi-Fi can be simulated.
+Enabling and disabling of R1 presence or absence of Wi-Fi can be simulated.
 
 When PvD1 becomes available, all new connections from PvD aware applications
 should use it, instead of PvD2 - simulate use Wi-Fi when available.
+
+Scripts: (TODO/debuging)
+- demo-20-02-C-pvd-retry.sh (all demo-20* files)
 
 >>> TODO
 For connections in progress there are several possibilities.
@@ -252,8 +262,6 @@ For connections in progress there are several possibilities.
    PvD (Wi-Fi).
 <<< TODO
 
-Script FIXME started on client FIXME ...
-
 
 2.3. Application preference
 
@@ -265,21 +273,29 @@ for specific client.
 Most of previous examples can be classified as special cases of this one.
 However, here its up to application to choose PvD that suits her best by
 comparing available PvD properties.
-Example properties used here are just that "example properties", not to be
-taken as something that should be used in some specification.
 
                           +------------------------------+
-                          | PVD1 +------+       +------+ |
+                          | PvD1 +------+       +------+ |
                        +--+----o-+  R1  +-o---o-+  S1  | |
-                       |  | PVD3 +------+       +------+ |
+                       |  |      +------+       +------+ |
           +--------+   |  +------------------------------+
           | Client +-o-+
           +--------+   |  +------------------------------+
                        |  | PvD2 +------+       +------+ |
                        +--+----o-+  R2  +-o---o-+  S2  | |
-                          | PvD4 +------+       +------+ |
+                          |      +------+       +------+ |
                           +------------------------------+
 
      Figure 2. Simulating PvDs with different properties
 
-Script FIXME started on client FIXME ...
+Scripts:
+- demo-03-01-C-free-Internet-or-else.sh
+- demo-20-02-C-pvd-retry.sh
+
+
+2.4. Multi PvD applications
+
+PvD aware application might need several PvDs simultaneously...
+
+Scripts:
+- demo-10-01-C-multi-pvd-client-udp.sh
