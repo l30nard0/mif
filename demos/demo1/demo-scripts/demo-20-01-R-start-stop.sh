@@ -30,7 +30,7 @@ if [ -n "$COMMAND" ]; then
   exit
 fi
 
-trap on_exit SIGINT
+trap reset SIGINT
 i=1
 while [ $i -lt 6 ]; do
   start
