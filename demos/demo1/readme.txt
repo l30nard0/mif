@@ -23,8 +23,8 @@ static address configuration (as shown on Figure 1, set up with demo scripts).
 (All nodes in test environment were virtual machines running Lubuntu 15.10.)
 
 
-                             +------+                                   +------+
-             2001:db8:1::1/48|      |2001:db8:10::1/32 2001:db8:10::2/32|      |
+                   fd01::1/64+------+                                   +------+
+             2001:db8:1::1/64|      |2001:db8:10::1/32 2001:db8:10::2/32|      |
              +-------------o-+  R1  +-o-------------------------------o-+  S1  |
 +--------+   |               |      |        :     [VMnet3]             |      |
 |        |   |               +------+        :                          +------+
@@ -32,10 +32,13 @@ static address configuration (as shown on Figure 1, set up with demo scripts).
 |        |   |               +------+        :                          +------+
 +--------+   |               |      |        :     [VMnet4]             |      |
              +-------------o-+  R2  +-o-------------------------------o-+  S2  |
-             2001:db8:2::1/48|      |2001:db8:20::1/32 2001:db8:20::2/32|      |
-                             +------+                                   +------+
+             2001:db8:2::1/64|      |2001:db8:20::1/32 2001:db8:20::2/32|      |
+                   fd02::1/64+------+                                   +------+
 
                 Figure 1. Network configuration in demo
+
+Routers R1 and R2 on client side network have public ip addresses (2001:*) but
+also local ip addresses (fd0x*) addresses (besides link-local IPv6 addresses).
 
 PvDs are identified by their ID. However, since this used ID is UUID (must be
 unique) in this text shorter names are used as identifiers. For example name
@@ -44,10 +47,10 @@ Real ID of this PvD will be different. Namespace created for this PvD will be in
 named "mifpvd-x" where "x" might be 1, 2, 3, ...
 
 PvDs are defined for radvd servers as follows (*PvD1 implicit, *PvD2 explicit):
-R1-PvD1: 2001:db8:1:1::/64 {"type":["internet", "wired"],    "bandwidth":"10 Mbps", "pricing":"free" }
-R1-PvD2: 2001:db8:1:2::/64 {"type":["iptv", "wired"],        "bandwidth":"10 Mbps", "pricing":"free" }
-R2-PvD1: 2001:db8:2:1::/64 {"type":["internet", "cellular"], "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
-R2-PvD2: 2001:db8:2:2::/64 {"type":["voice", "cellular"],    "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
+R1-PvD1: 2001:db8:1::/64 {"type":["internet", "wired"],    "bandwidth":"10 Mbps", "pricing":"free" }
+R1-PvD2: fd01::/64       {"type":["iptv", "wired"],        "bandwidth":"10 Mbps", "pricing":"free" }
+R2-PvD1: 2001:db8:2::/64 {"type":["internet", "cellular"], "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
+R2-PvD2: fd02::/64       {"type":["voice", "cellular"],    "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
 
 Services on hosts:
 Client: MIF-pvdman + custom created applications (testapps)
