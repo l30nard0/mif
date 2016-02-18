@@ -17,6 +17,10 @@ def ndp_pending ( fd, cond, ndpc, pvdman ):
 		for ( iface, pvdInfo ) in pvdinfos:
 			pvdman.setPvd ( iface, pvdInfo )
 
+			# for demo with PvD
+			#if "vpn-demo" in pvdInfo.pvd_properties["type"]:
+			#	asd
+
 	return True
 
 # check routers

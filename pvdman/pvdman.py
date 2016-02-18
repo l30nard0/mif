@@ -77,6 +77,9 @@ class PvdManager:
     self.__createDefaultNetnsSymlink()
     # register a cleanup handler to remove configured PvDs and associated components at exit
     atexit.register(self.cleanup)
+
+    self.operation_in_progress = False # debugging...
+
     LOG.debug('cleanup handler initialized')
     LOG.debug('PvdManager initialization finished')
 
@@ -369,14 +372,19 @@ class PvdManager:
     If no PvD with a given ID is configured on a given interface, new PvD will be created.
     If PvD with a given ID is already configured on the interface, PvD parameters will be reconfigured if necessary.
     '''
+    self.operation_in_progress = True  # debugging...
+
     if (self.pvds.get((phyIfaceName, pvdInfo.pvdId)) is None):
       self.__createPvd(phyIfaceName, pvdInfo)
     else:
       self.__updatePvd(phyIfaceName, pvdInfo)
 
+    self.operation_in_progress = False # debugging...
 
   def removePvd(self, phyIfaceName, pvdId):
+    self.operation_in_progress = True  # debugging...
     self.__removePvd(phyIfaceName, pvdId)
+    self.operation_in_progress = False # debugging...
 
 
   def listPvds(self):

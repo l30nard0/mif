@@ -22,6 +22,13 @@ function client_start {
 
 function client_stop {
   killall -SIGINT python3 && echo "mif-pvd man stopped"
+  if [ $? == "0" ]; then
+    sleep 3
+    ps -A | grep python3 > /dev/null
+    if [ $? == "0" ]; then
+      killall -SIGINT python3 && echo "mif-pvd man killed"
+    fi
+  fi
   py3clean $PVDMAN
 }
 

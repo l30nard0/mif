@@ -40,6 +40,9 @@ class PvdApiServer ( dbus.service.Object ):
 	@dbus.service.method('org.freedesktop.PvDManager')
 	def get_by_id ( self, pvd_id ):
 		''' application request specific pvd information, or list of pvds '''
+		if self.pvdman.operation_in_progress:
+			return self.__format_pvds_for_reply ([empty_pvd])
+
 		pvds = self.__get_pvds ()
 
 		if pvd_id != "*":
@@ -53,6 +56,8 @@ class PvdApiServer ( dbus.service.Object ):
 	@dbus.service.method('org.freedesktop.PvDManager')
 	def activate ( self, pvd_id, pid ):
 		''' return pvd information for that specific pvd '''
+		if self.pvdman.operation_in_progress:
+			return self.__format_pvds_for_reply ([empty_pvd])
 		pvds = self.__get_pvds ()
 		p = [ pvd for pvd in pvds if str(pvd_id) == pvd[0] ]
 		if len(p) == 1:
@@ -74,6 +79,8 @@ class PvdApiServer ( dbus.service.Object ):
 	def get_by_properties ( self, properties ):
 		''' application request specific pvd information, or list of pvds '''
 		# properties is a json string defining required properties
+		if self.pvdman.operation_in_progress:
+			return self.__format_pvds_for_reply ([empty_pvd])
 		props = json.loads(properties)
 		pvds = self.__get_pvds ()
 

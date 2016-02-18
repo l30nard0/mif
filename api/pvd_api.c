@@ -24,8 +24,12 @@
 
 static GDBusConnection *connect ()
 {
-	GDBusConnection *connection;
+	static GDBusConnection *connection = NULL;
 	GError *error = NULL;
+
+	if ( connection )
+		return connection;
+
 	connection = g_bus_get_sync ( G_BUS_TYPE_SYSTEM, NULL, &error );
 	if ( connection == NULL )
 	{
@@ -65,7 +69,7 @@ GVariant *pvd_call_method ( char *method_name, GVariant *params, const GVariantT
 		}
 	}
 
-	g_object_unref(connection);
+	//g_object_unref(connection);
 	return value;
 }
 
