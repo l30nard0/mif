@@ -14,36 +14,31 @@ if [ "$ROLE" != "C" -a "$ROLE" != "S2" ]; then Usage; fi
 COMMAND=$1
 
 function create {
-  # add ip address to interface $IFACE
   /sbin/ip -6 addr add "$LOCAL_IP/64" dev $IFACE
   /sbin/ip -6 route add $REMOTE_IP via $GW
-
-  # create tunnel
   ip -6 tunnel add $TUNNEL mode ip6gre local $LOCAL_IP remote $REMOTE_IP dev $DEV1
-  ip link set dev $TUNNEL up
-
-  #ip address add $TUNNEL_IP/64 dev $TUNNEL
-
-  #move to namespace VPNTEST
-  ip netns add VPNTEST
-  ip link set dev $TUNNEL netns VPNTEST
-  ip netns exec VPNTEST ip address add $TUNNEL_IP/64 dev $TUNNEL
-  ip netns exec VPNTEST ip link set dev $TUNNEL up
-
-  #ip -6 addr add fe80::20c:29ff:fe90:878b/64 dev $TUNNEL
-  #if [ $ROLE == "S2" ]; then
-  #  source demo-30-01-S2-radvd.conf > $TMPDIR/radvd.conf
-  #  /usr/local/sbin/radvd -d 5 -n -C $TMPDIR/radvd.conf -m logfile -l $TMPDIR/radvd.log &
-  #  echo "radvd started"
-  #fi
+  if [ "$ROLE" == "C" ]; then
+    ip netns add VPNTEST
+    ip link set dev $TUNNEL netns VPNTEST
+    ip netns exec VPNTEST ip address add $TUNNEL_IP/64 dev $TUNNEL
+    ip netns exec VPNTEST ip link set dev $TUNNEL up
+  else
+    ip address add $TUNNEL_IP/64 dev $TUNNEL
+    ip link set dev $TUNNEL up
+    # source demo-30-01-S2-radvd.conf > $TMPDIR/radvd.conf
+    # /usr/local/sbin/radvd -d 5 -n -C $TMPDIR/radvd.conf -m logfile -l $TMPDIR/radvd.log &
+    # echo "radvd started"
+  fi
 }
 function delete {
-  ip netns exec VPNTEST ip link del $TUNNEL
-  ip netns del VPNTEST
+  if [ "$ROLE" == "C" ]; then
+    #ip netns exec VPNTEST ip link del $TUNNEL
+    ip netns del VPNTEST
+  else
+    ip -6 tunnel del $TUNNEL
+    # killall radvd
+  fi
 
-  #if [ $ROLE == "S2" ]; then killall radvd; fi
-  #ip address del $TUNNEL_IP/64 dev $TUNNEL
-  #ip -6 tunnel del $TUNNEL mode ip6gre local $LOCAL_IP remote $REMOTE_IP dev $DEV1
   ip -6 route del $REMOTE_IP via $GW
   ip -6 addr del "$LOCAL_IP/64" dev $IFACE
 }
