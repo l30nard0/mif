@@ -16,23 +16,25 @@ COMMAND=$1
 function create {
   # add ip address to interface $IFACE
   /sbin/ip -6 addr add "$LOCAL_IP/64" dev $IFACE
+  /sbin/ip -6 route add $REMOTE_IP via $GW
 
   # create tunnel
   ip -6 tunnel add $TUNNEL mode ip6ip6 local $LOCAL_IP remote $REMOTE_IP dev $DEV1
   ip link set dev $TUNNEL up
 
-  if [ $ROLE == "S2" ]; then
-    ip address add fd02::2/64 dev $TUNNEL
+  #if [ $ROLE == "S2" ]; then
+    ip address add $TUNNEL_IP/64 dev $TUNNEL
 #    start_radvd
-  fi
+  #fi
 }
 function delete {
-  ip -6 tunnel del $TUNNEL mode ip6ip6 local $LOCAL_IP remote $REMOTE_IP dev $DEV1
-  /sbin/ip -6 addr del "$LOCAL_IP/64" dev $IFACE
-  if [ $ROLE == "S2" ]; then
-    ip address del fd02::2/64 dev $TUNNEL
+  #if [ $ROLE == "S2" ]; then
+    ip address del $TUNNEL_IP/64 dev $TUNNEL
 #    stop radvd
-  fi
+  #fi
+  ip -6 tunnel del $TUNNEL mode ip6ip6 local $LOCAL_IP remote $REMOTE_IP dev $DEV1
+  /sbin/ip -6 route del $REMOTE_IP via $GW
+  /sbin/ip -6 addr del "$LOCAL_IP/64" dev $IFACE
 }
 
 # directories
@@ -44,9 +46,13 @@ TESTAPPS=$REPOROOT/testapps
 if [ $ROLE == "C" ]; then
   LOCAL_IP="2001:db8:2::200"
   REMOTE_IP="2001:db8:20::201"
+  TUNNEL_IP="fd02::200"
+  GW="2001:db8:2::1"
 else
   LOCAL_IP="2001:db8:20::201"
   REMOTE_IP="2001:db8:2::200"
+  TUNNEL_IP="fd02::201"
+  GW="2001:db8:20::1"
 fi
 
 source $DEMOHOME/conf_$ROLE.sh
