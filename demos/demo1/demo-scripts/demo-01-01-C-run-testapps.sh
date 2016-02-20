@@ -30,9 +30,9 @@ echo Running: pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3f ip a
 $TESTAPPS/pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3f ip a
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://[2001:db8:10::2] -P $TMPDIR
-$TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://[2001:db8:10::2] -P $TMPDIR
+echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget  -q -O - http://[2001:db8:10::2]
+$TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget  -q -O - http://[2001:db8:10::2]
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://www.pvd1.org -P $TMPDIR
-$TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://www.pvd1.org -P $TMPDIR
+echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget  -q -O - http://www.pvd1.org
+$TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget  -q -O - http://www.pvd1.org
