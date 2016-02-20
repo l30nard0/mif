@@ -1,0 +1,38 @@
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_list
+Requesting all (*):
+id: 317a088c-ab67-43a3-bcf0-23c26f623a2d ns:VPNTEST iface:tunnelX
+properties: {"pricing": "0,01 $/MB", "bandwidth": "1 Mbps", "type": ["voice", "cellular"], "id": "317a088c-ab67-43a3-bcf0-23c26f623a2d"}
+
+id: 2ca7aae2-3d8b-aa20-ea0b-bf62ff78f1a0 ns:mifpvd-1 iface:eno33554984
+properties: {"id": "implicit", "name": "Cellular internet access", "type": ["internet", "cellular"], "pricing": "0,01 $/MB", "bandwidth": "1 Mbps"}
+
+id: f037ea62-ee4f-44e4-825c-16f2f5cc9b3e ns:mifpvd-2 iface:eno33554984
+properties: {"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e", "name": "Phone", "type": ["voice", "cellular"], "pricing": "0,01 $/MB", "bandwidth": "0,1 Mbps"}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_run f037ea62-ee4f-44e4-825c-16f2f5cc9b3e wget -q -O - http://[fd02::01]
+Activating pvd: f037ea62-ee4f-44e4-825c-16f2f5cc9b3e:
+pvd f037ea62-ee4f-44e4-825c-16f2f5cc9b3e activated!
+Executing: wget -q -O - http://[fd02::01]
+<html>
+  <head>
+    <title>Test Page served by R2</title>
+  </head>
+  <body>
+    <h1 style="color:red">Test Page served by R2</h1>
+  </body>
+</html>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Running: pvd_run 317a088c-ab67-43a3-bcf0-23c26f623a2d wget -q -O - http://[fd02::01]
+Activating pvd: 317a088c-ab67-43a3-bcf0-23c26f623a2d:
+pvd 317a088c-ab67-43a3-bcf0-23c26f623a2d activated!
+Executing: wget -q -O - http://[fd02::01]
+<html>
+  <head>
+    <title>Test Page served by S2</title>
+  </head>
+  <body>
+    <h1 style="color:red">Test Page served by S2</h1>
+  </body>
+</html>

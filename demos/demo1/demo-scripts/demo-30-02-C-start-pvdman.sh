@@ -22,7 +22,7 @@ PVDMAN=$REPOROOT/pvdman
 TMPLDIR=$DEMOHOME/templates
 
 function start {
-  ${0%/*}/demo-30-01-C+S2.sh create
+  #${0%/*}/demo-30-01-C+S2.sh create
   mkdir -p $TMPDIR
   if [ ! -f /etc/dbus-1/system.d/dbus-pvd-man.conf ]; then
     cp $TMPLDIR/dbus-pvd-man.conf /etc/dbus-1/system.d/
@@ -45,7 +45,7 @@ function stop {
     fi
   fi
   py3clean $PVDMAN
-  ${0%/*}/demo-30-01-C+S2.sh delete
+  #${0%/*}/demo-30-01-C+S2.sh delete
 }
 
 eval $COMMAND
