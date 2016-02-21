@@ -23,25 +23,25 @@ static address configuration (as shown on Figure 1, set up with demo scripts).
 (All nodes in test environment were virtual machines running Lubuntu 15.10.)
 
 
-                   fd01::1/64+------+                                   +------+
-             2001:db8:1::1/64|      |2001:db8:10::1/32 2001:db8:10::2/32|      |
-             +-------------o-+  R1  +-o-------------------------------o-+  S1  |
-+--------+   |               |      |        :     [VMnet3]             |      |
-|        |   |               +------+        :                          +------+
-| Client +-o-+ [VMnet2]                      : (for some tests this is linked)
-|        |   |               +------+        :                          +------+
-+--------+   |               |      |        :     [VMnet4]             |      |
-             +-------------o-+  R2  +-o-------------------------------o-+  S2  |
-             2001:db8:2::1/64|      |2001:db8:20::1/32 2001:db8:20::2/32|      |
-                   fd02::1/64+------+                                   +------+
+                fd01::1/64+------+                                   +------+
+          2001:db8:1::1/64|      |2001:db8:10::1/32 2001:db8:10::2/32|      |
+             +----------o-+  R1  +-o-------------------------------o-+  S1  |
++--------+   |            |      |        :     [VMnet3]             |      |
+|        |   |            +------+        :                          +------+
+| Client +-o-+ [VMnet2]                   : (for some tests this is linked)
+|        |   |            +------+        :                          +------+
++--------+   |            |      |        :     [VMnet4]             |      |
+             +----------o-+  R2  +-o-------------------------------o-+  S2  |
+          2001:db8:2::1/64|      |2001:db8:20::1/32 2001:db8:20::2/32|      |
+                fd02::1/64+------+                                   +------+
 
                 Figure 1. Network configuration in demo
 
 Routers R1 and R2 on client side network have public ip addresses (2001:*) but
-also local ip addresses (fd0x*) addresses (besides link-local IPv6 addresses).
+also local ip addresses (fd0x*, besides link-local IPv6 addresses).
 
-PvDs are identified by their ID. However, since this used ID is UUID (must be
-unique) in this text shorter names are used as identifiers. For example name
+PvDs are identified by their ID. However, since UUID is used as ID (must be
+unique), in this text shorter names are used as identifiers. For example name
 R1-PvD1 refers to first PvD provided by R1 (first is usually implicit).
 Real ID of this PvD will be different. Namespace created for this PvD will be in
 named "mifpvd-x" where "x" might be 1, 2, 3, ...
@@ -61,13 +61,13 @@ Routes for S1 and S2:
 - 2001:db8:1::/48 via 2001:db8:10::1 (for S2 only when VMnet4 == VMnet3)
 - 2001:db8:2::/48 via 2001:db8:20::1 (for S1 only when VMnet4 == VMnet3)
 
-Configuration is setup via scripts. For example for R1:
+Configuration is set via scripts. E.g. for R1:
 - R1_conf.sh (R1 settings; settings are saved in environment variables)
 - templates: radvd.conf, httpd.conf, bind_append.conf, pvd-zone.db
 - run.sh - creates configuration files from templates using settings from
   R1_conf.sh, assign IP addresses to interfaces and starts services afterwards
   (radvd, apache2 and bind9)
-Scripts are executed with: sudo ./run.sh <command> <host>
+Scripts are executed with: sudo ./run.sh <command> [<host>]
 where <command> is one of "start", "stop" and "clean",
 while <host> is one of C, R1, R2, S1 and S2.
 Command "stop" will stop all started services and applications.
@@ -131,7 +131,7 @@ PvD2 for reaching specific Video-on-Demand Service (Figure 2).
 
    Figure 2. Simulating Home Network and a Network Operator with Multiple PvDs
 
-Script for demonstrattion:
+Script for demonstration:
 - demo-01-01-C-run-testapps.sh (parts of)
 - demo-02-01-C-req-free-internet.sh
 - demo-02-02-C-req-voice.sh
@@ -161,33 +161,44 @@ Script for demonstrattion:
            Figure RFC7566-2: An Example of PvD Use with VPN
 <<<<
 
-TODO (working on it)
+VPN connection is simulated with IP tunnel between Client and S2 (over R2).
+Public IPv6 addresses are used for tunnel endpoints.
+Local network on client side uses fd02::/64.
+Local network on S2 is the same fd02::/64 (different local network!).
 
-After establishing VPN connection separate PvD could be created for VPN.
-Private Services accessible through this PvD, possibly using local address,
-could even have same addresses as local hosts (connected to the same Home
-Gateway). This will not be a problem since applications will run in either
-VPN PvD for accessing private services through VPN or in other VPN for
-accessing Internet or local hosts.
+            fd01::1/64+------+                                   +------+
+      2001:db8:1::1/64|      |2001:db8:10::1/32 2001:db8:10::2/32|      |
+             +------o-+  R1  +-o-------------------------------o-+  S1  |
++--------+   |        |      |        :     [VMnet3]             |      |
+|        |   |        +------+        :                          +------+
+| Client +-o-+ [VMnet2]               :
+|        |   |        +------+        :                          +------+
++---+----+   |        |      |        :     [VMnet4]             |      | fd02::/64
+    |        +------o-+  R2  +-o-------------------------------o-+  S2  +-------
+    | 2001:db8:2::1/64|      |2001:db8:20::1/32 2001:db8:20::2/32|      | remote
+    |       fd02::1/64+------+                                   +--+---+ local
+    |                                                               |     network
+    +---------------------------------------------------------------+
+VPN connection (tunnel) to remote local network fd02::/64
 
-                         +-------------------+
-                         | +-----------------+-------------+
-                         | | PvD1 +------+   |    +------+ |
-              (Phy-IF) +-+-+----o-+  R1  +-o-+--o-+  S1  | | (Internet)
-                       | | |      +------+   |    +------+ |
-          +--------+   | | +-----------------+-------------+
-          | Client +-o-+ |                   |
-          +--------+   | | +-----------------+-------------+
-                       | | | PvD2 +------+   |    +------+ |
-              (VPN-IF) +-+-+----o-+  R2  +-o-+--o-+  S2  | | (VPN Gateway+
-                         | |      +------+   |    +------+ |  Private Services)
-                         | +-----------------+-------------+
-                         |   (Home Gateway)  |
-                         +-------------------+
+                Figure 1. Network configuration in demo
 
-            Figure 3. Simulating a Node with a VPN Connection
+Tunnel is created by script on both sides (Client and S2).
+On client side, tunnel is moved into VPNTEST namespace.
+PvD for tunnel is added to pvdman without its involvement in network configuration.
 
-Scripts TODO
+Several PvDs are used in demo. Between them are:
+- PvD for local network fd02::/64 (Cliend + R2)
+- PvD for remote local network fd02::/64 (local network behind S2)
+
+Using different PvDs, different networks are used.
+This is demonstrated with downloading from web server from address fd02::1.
+When downloading from local PvD R2 is used, otherwise (remote locale) S2 is used.
+
+Script for demonstration (details in demo-30-00.txt):
+- $ sudo ./demo-30-01-C+S2-tunnel.sh create
+- $ sudo ./demo-30-02-C-start-pvdman.sh start
+- $ sudo ./demo-30-03-C-start-apps.sh
 
 
 2.2. Mobility
