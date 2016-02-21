@@ -34,5 +34,5 @@ echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wge
 $TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget  -q -O - http://[2001:db8:10::2]
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget  -q -O - http://www.pvd1.org
-$TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget  -q -O - http://www.pvd1.org
+echo Running: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://www.pvd1.org
+$TESTAPPS/pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" wget http://www.pvd1.org
