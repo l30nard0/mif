@@ -1,0 +1,56 @@
+http://baturin.org/docs/iproute2/#Create an IP6IP6 tunnel
+Create an IP6IP6 tunnel
+
+ip -6 tunnel add ${interface name} mode ip6ip6 local ${local endpoint address} remote ${remote endpoint address}
+Examples:
+ip -6 tunnel add tun3 mode ip6ip6 local 2001:db8:1::1 remote 2001:db8:1::2
+ip link set dev tun3 up
+ip address add 2001:db8:2:2::1/64 dev tun3
+
+Leo:
+ip -6 tunnel add tun1 mode ip6ip6 local 2001:db8:2:2:cc6a:7dff:febd:dc30 remote 2001:db8:20::2
+ip link set dev tun1 up
+ip address add 2001:db8:2:2::1/64 dev tun1
+
+
+Delete a tunnel
+
+ip tunnel del ${interface name}
+Examples:
+ip tunnel del gre1
+
+View tunnel information
+
+ip tunnel show
+ip tunnel show ${interface name}
+Examples:
+$ip tun show tun99
+tun99: gre/ip  remote 10.46.1.20  local 10.91.19.110  ttl inherit
+
+
+
+http://linux-hacks.blogspot.hr/2008/02/howto-ipv6-ipv6-tunnel-and-ip4-ipv6.html
+
+google: ip tunnel mode ip6ip6 example
+
+
+
+
+
+
+
+
+
+
+
+Modified EUI-64[edit]
+A 64-bit interface identifier is most commonly derived from its 48-bit MAC address. A MAC address 00:0C:29:0C:47:D5 is turned into a 64-bit EUI-64 by inserting FF:FE in the middle: 00:0C:29:FF:FE:0C:47:D5. When this EUI-64 is used to form an IPv6 address it is modified:[1] the meaning of the Universal/Local bit (the 7th most significant bit of the EUI-64, starting from 1) is inverted, so that a 1 now means Universal. To create an IPv6 address with the network prefix 2001:db8:1:2::/64 it yields the address 2001:db8:1:2:020c:29ff:fe0c:47d5 (with the underlined U/L (=Universal/Local) bit inverted to a 1, because the MAC address is universally unique).
+
+
+MAC: 00:0C:29:0C:47:D5
+     000C:29FF:FE0C:47D5
+XOR  0200:0000:0000:0000
+IP6::020C:29FF:FE0C:47D5
+
+00:0c:29:16:a0:4c
+fe80::20c:29ff:fe16:a04c

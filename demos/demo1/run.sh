@@ -1,15 +1,21 @@
 #!/bin/bash
 
 function Usage () {
-  echo "Usage: sudo $0 start|stop C|R1|R2|S1|S2"
-  exit
+  echo "Usage: sudo $0 start|stop [C|R1|R2|S1|S2]"
+  exit 1
 }
-if [ "$1" != "start" -a "$1" != "stop" -a "$1" != "clean" ]; then Usage; fi
-if [ "$2" != "C" -a "$2" != "R1" -a "$2" != "R2" \
-     -a "$2" != "S1" -a "$2" != "S2" ]; then Usage; fi
 
+if [ "$1" != "start" -a "$1" != "stop" -a "$1" != "clean" ]; then Usage; fi
 COMMAND=$1
-ROLE=$2
+
+if [ -n "$2" ]; then
+  ROLE=$2
+else
+  ROLE=`hostname`
+  if [ $ROLE == "client" ]; then ROLE="C"; fi
+fi
+if [ "$ROLE" != "C" -a "$ROLE" != "R1" -a "$ROLE" != "R2" \
+     -a "$ROLE" != "S1" -a "$ROLE" != "S2" ]; then Usage; fi
 
 # directories
 DEMOHOME=${0%/*}
@@ -28,14 +34,14 @@ DNSPVDZONE=pvd${IND}.org
 NAMEDPVDZONEFILE=${DNSPVDZONE}.db
 
 # radvd
-PVD_1_PREFIX="2001:db8:${IND}:1::/64"
-PVD_1_ROUTE="2001:db8:${IND}:1::/64"
+PVD_1_PREFIX="2001:db8:${IND}::/64"
+PVD_1_ROUTE="2001:db8:${IND}::/64"
 PVD_1_DNSSL="$DNSPVDZONE"
 PVD_1_RDNSS="2001:db8:${IND}::1 2001:db8:${IND}0::2"
-PVD_2_PREFIX="2001:db8:${IND}:2::/64"
-PVD_2_ROUTE="2001:db8:${IND}:2::/64"
+PVD_2_PREFIX="fd0${IND}::/64"
+PVD_2_ROUTE="fd0${IND}::/64"
 PVD_2_DNSSL="$DNSPVDZONE"
-PVD_2_RDNSS="2001:db8:${IND}::1 2001:db8:${IND}0::2"
+PVD_2_RDNSS="fd0${IND}::1"
 
 # web server
 HTTPDCONFDIR=/etc/apache2/sites-enabled
@@ -68,6 +74,7 @@ function start {
         stop && exit 1
       fi
       /sbin/ip -6 addr add $IP2NET dev $DEV2
+      /sbin/ip -6 addr add fd0${IND}::1/64 dev $DEV1
     fi
 
     # dns server
@@ -138,7 +145,10 @@ function stop {
     if [ -n "$CUSTOMSERVERAPP" ]; then killall $CUSTOMSERVERAPP; fi
 
     if [ -n "$IP1NET" ]; then /sbin/ip -6 addr del $IP1NET dev $DEV1; fi
-    if [ -n "$IP2NET" ]; then /sbin/ip -6 addr del $IP2NET dev $DEV2; fi
+    if [ "$ROLE" = "R1" -o "$ROLE" = "R2" ]; then
+      /sbin/ip -6 addr del fd0${IND}::1/64 dev $DEV1
+      if [ -n "$IP2NET" ]; then /sbin/ip -6 addr del $IP2NET dev $DEV2; fi
+    fi
 
     if [ -n "$ROUTE1_DEL" ]; then eval $ROUTE1_DEL; fi
     if [ -n "$ROUTE2_DEL" ]; then eval $ROUTE2_DEL; fi

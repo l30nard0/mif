@@ -1,0 +1,21 @@
+This demo simulate VPN in separate PvD.
+IP addresses in VPN are the same as in local network (C-R2).
+
+For this simulation several changes were required:
+- to simulate VPN tunnel from C to S2 is used (ip6gre/ip6ip6)
+- on client, tunnel is moved to new namespace VPNTEST
+- modified version of pvdman is used:
+  * special PvD is inserted into pvdman (without any network operation)
+
+Starting simulation:
+- create tunnels on C and S2 run:
+  $ sudo ./demo-30-01-C+S2-tunnel.sh create
+- run pvdman (with --demo 30 flag):
+  $ sudo ./demo-30-02-C-start-pvdman.sh start
+- start demo apps:
+  $ sudo ./demo-30-03-C-start-apps.sh
+
+
+Web server is contacted on "local" address fd02::1.
+When in "local fd02" PvD web server on R2 is contacted.
+When in "vpn fd02" PvD web server on S2 is contacted.

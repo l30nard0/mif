@@ -10,8 +10,8 @@ TESTAPPS=$REPOROOT/testapps
 ( cd $TESTAPPS && make > /dev/null 2>&1 )
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo Running: pvd_prop_run "{\"type\": \"voice\"}" wget http://[2001:db8:20::2]/swtheme.mp3 -P $TMPDIR
-$TESTAPPS/pvd_prop_run "{\"type\": \"voice\"}" wget http://[2001:db8:20::2]/swtheme.mp3 -P $TMPDIR
+echo Running: pvd_prop_run "{\"type\": \"voice\"}" wget http://[fd02::1]/swtheme.mp3 -P $TMPDIR
+$TESTAPPS/pvd_prop_run "{\"type\": \"voice\"}" wget http://[fd02::1]/swtheme.mp3 -P $TMPDIR
 
 # or launch in firefox
 #$TESTAPPS/pvd_prop_run "{\"type\": \"voice\"}" firefox http://[2001:db8:20::2]/swtheme.mp3

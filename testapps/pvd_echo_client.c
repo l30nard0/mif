@@ -1,14 +1,12 @@
 /*
- * MIF application that use two PvDs simultaneously
+ * MIF application that use "best" PvD to reach server on "internet".
+ * When better become available use it. When current become unreachable, use
+ * next one.
  *
- * Two echo servers should be running, accessible from different PvDs
- *
- * usage: multi_pvd_echo_client pvd1 server1 port1 pvd2 server2 port2
+ * usage: pvd_echo_client server port
  *
  * example:
- * $ ./echo_client <address> <port>\
-     f037ea62-ee4f-44e4-825c-16f2f5cc9b3f 2001:db8:10::2 20000 \
-     f037ea62-ee4f-44e4-825c-16f2f5cc9b3e 2001:db8:20::2 20000
+ * $ ./pvd_echo_client <address> <port>
  */
 
 #include <stdio.h>

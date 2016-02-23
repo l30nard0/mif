@@ -56,12 +56,15 @@ if __name__ == "__main__":
 	# parse command line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument ( '-i', required=False, type=str, help='interface name where to listen for RAs', dest='iface' )
-	parser.add_argument ( '-u', required=False, type=str, help='PvD identifier to ask from radvd', dest='uuid' )
+	#parser.add_argument ( '-u', required=False, type=str, help='PvD identifier to ask from radvd', dest='uuid' )
+	parser.add_argument ( '--demo', required=False, type=str, help='Activate some demo options' )
 	arg = parser.parse_args()
 
 	# create pvdmanager control object
 	pvdman = PvdManager()
 	print ( "PvdManager Initialized" )
+	if arg.demo and arg.demo == "30":
+		pvdman.TEST_createPvd()
 
 	# main loop, dbus initialization
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
@@ -78,7 +81,8 @@ if __name__ == "__main__":
 		ndpc.send_rs ()
 
 	# setup timer for periodic checking of pvds
-	pvd_ping ( pvdman, ndpc )
+	if not arg.demo or arg.demo != "30":
+		pvd_ping ( pvdman, ndpc )
 
 	# mail loop - wait for events
 	loop = GObject.MainLoop()

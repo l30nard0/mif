@@ -319,7 +319,6 @@ class PvdManager:
     else:
       raise Exception('Interface {0} does not exist'.format(phyIfaceName))
 
-
   def __updatePvd(self, phyIfaceName, pvdInfo):
     pvd = self.pvds.get((phyIfaceName, pvdInfo.pvdId))
     if (pvd):
@@ -403,6 +402,15 @@ class PvdManager:
 
   def getPvdInfo(self, phyIfaceName, pvdId):
     return self.pvds.get((phyIfaceName, pvdId))
+
+  def TEST_createPvd ( self, phyIfaceName="tunnelX", pvdId="317a088c-ab67-43a3-bcf0-23c26f623a2d" ):
+    netnsName = "VPNTEST"
+    pvdIfaceName = netnsName
+    pvdInfo = PvdInfo ( pvdId, PvdType.EXPLICIT, None, None, None, None, None, None, None, None,
+		{"type":["voice", "cellular"], "bandwidth":"1 Mbps", "pricing":"0,01 $/MB", "id":pvdId } )
+    pvd = Pvd ( pvdInfo.pvdId, pvdInfo, phyIfaceName, pvdIfaceName, netnsName )
+    self.pvds[(phyIfaceName, pvd.pvdId)] = pvd
+    LOG.info('PvD {0} received through {1} CONFIGURED in network namespace {2} on macvlan {3}, type {4}'.format(pvd.pvdId, pvd.phyIfaceName, pvd.netnsName, pvd.pvdIfaceName, pvd.pvdInfo.pvdType))
 
 
   def cleanup(self):

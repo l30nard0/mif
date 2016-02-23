@@ -15,7 +15,7 @@ DEV2=eno50332208 # second device usen in tests (empty if not used)
 # IP addresses
 IP1="2001:db8:${IND}::1"   # for DEV1
 IP2="2001:db8:${IND}0::1"  # for DEV2
-IP1NET="$IP1/48"
+IP1NET="$IP1/64"
 IP2NET="$IP2/32"
 
 # DNS
