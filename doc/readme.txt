@@ -9,8 +9,9 @@ Contents
 1. Architecture Overview and Implementation Details
 2. PvD Properties
 3. Overview of Development Environment
-4. Summary of design decisions used in implementation
-5. TODO list
+4. Using MIF prototype
+5. Summary of design decisions used in implementation
+6. Implementation problems, workarounds and TODOs
 
 1. Architecture Overview and Implementation Details
 ---------------------------------------------------
@@ -100,7 +101,8 @@ within a given namespace, it should be started with:
 -----------------
 With RA messages routers provides network relate parameters for PvDs.
 Other parameters (in this "draft" called "properties") are also provided by
-router, but only on request, using HTTP protocol on router's link-local address.
+router, but only on request, using HTTP protocol on router's link-local address,
+using port 8080.
 
 Upon receiving PvD information from router, MIF-pvdman tries to get a file with
 PvD properties from the same router. If such file exists, network related PvD
@@ -123,7 +125,7 @@ them.
 
 Examples for PvD properties:
 [
-    {
+	{
 		"name": "Home internet access",
 		"type": ["internet", "wired"],
 		"id": "implicit",
@@ -187,51 +189,65 @@ Service on client - MIF-pvdman:
     - responds to d-bus requests from client applications and sends them PvD
       information back
 
-Legacy, PvD unaware application:
-- for it to use PvDs it should be started with:
-  * ip netns exec:
+4. Using MIF prototype
+----------------------
+4.1. Legacy, PvD unaware applications
+
+To use PvDs an PvD unaware applications should be started:
+
+  * with: ip netns exec
     $ ip netns exec <namespace-name> <application-name> [arguments...]
-  * or MIF launchers pvd_run or pvd_prop_run:
+      e.g.: ip netns exec mifpvd-1 firefox http://www.pvd1.org
+
+  * or with MIF launchers: pvd_run or pvd_prop_run:
     $ sudo ./pvd_run <pvd-id> <application-name> [arguments...]
+      e.g.: pvd_run bbffa8f5-0db3-5e6b-b585-c2ebd1a92af5 wget http://www.pvd1.org
+
     $ sudo ./pvd_prop_run <req-properties> <application-name> [arguments...]
+      e.g.: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" \
+            wget http://www.pvd1.org
 
-MIF aware applications on client:
-- use C API, directory "api"
-- sample application in directory "testapps"
-- client side API:
-  * written for C programming language
-  * requires glib2-devel package
-  * uses d-bus to connect to MIF-pvdman (module pvdserver.py)
-  * methods:
-    - pvd_get_by_id - get a list of PvDs which id contains given string
-    - pvd_get_by_properties - get a list of PvDs which have requested properties
-    - pvd_activate:
-      * get PvD with given id
-      * save information about which PvDs are used (this isn't implemented yet;
-        is it required/useful?)
-      * switch calling thread (process) into given PvD (namespace)
-    - pvd_reset - switch application back to default namespace (not managed by
-      MIF-pvdman)
-- using API:
-  * pvd_activate (and possibly pvd_get_by_id/pvd_get_by_properties before it)
-    - before socket is opened, and before other network related operations like
-      getaddrinfo, gethostbyname and similar that preceed "socket" a PvD must be
-      selected with pvd_activate
-    - additional socket control operations like bind/setsockopt can be used then
-  * if required, another socket can be opened in same/another PvD
-  * as long as PvDs socket was created in is operational, other send/receive
-    operations on that socket should work as expected
-- test applications:
-  * some test applications are implemented in "testapps"
-  * pvd_list, pvd_run, pvd_prop_run, ...
-  * usage: sudo ./<prog> [arguments]
+4.2. MIF aware applications
+MIF aware applications are created using C API, from directory "api".
+Sample application are presented in directory "testapps".
 
-Test Case:
-- test cases and results are presented in directory "demos"
+Properties of API:
+- API is written for C programming language
+- requires glib2-devel package
+- uses d-bus to connect to MIF-pvdman (with its module pvdserver.py)
+- methods provided by API:
+  * pvd_get_by_id - get a list of PvDs which id matches (contains) given string
+  * pvd_get_by_properties - get a list of PvDs which have requested properties
+  * pvd_activate:
+    - retrieve PvD with given id
+    - TODO: MIF-pvdman should save information about which PvDs are used
+    - switch calling thread (process) into given PvD (namespace)
+  * pvd_reset - switch application back to default namespace (not managed by
+    MIF-pvdman)
+
+API usage reccomentations/steps
+1. Use calls to pvd_get_by_id/pvd_get_by_properties to get desired PvD Id.
+2. Call pvd_activate to switch thread/process to desired PvD.
+3. Call operations that precede "socket", like getaddrinfo, gethostbyname, ...
+4. Open socket
+5. Call (control) operations on created socket, like bind, setsockopt, ...
+6. Socket is ready to be used.
+Switching to another PvD will not affect already opened and prepared socket.
+Opening socket in another PvD (besides already opened ones) should follow the
+same procedure: steps 1 to 6.
+As long as PvD socket was created in is operational, other network related
+operations like send and receive on that socket should work as expected, in
+selected PvD.
+
+Test applications prepared in "testapps" should be compiled with make [appname]
+and started with: sudo ./appname [arguments]
+
+Demonstration test cases are presented in directory "demos", along with sample
+output from test runs.
 
 
-4. Summary of design decisions used in implementation
-
+5. Summary of design decisions used in implementation
+-----------------------------------------------------
 - Linux namespaces as PvD isolation mechanism
   * Single PvD resides within single PvD. This choice is discussed in design
     document (Modifications on Fedora to support MIF).
@@ -248,6 +264,7 @@ Test Case:
   * Parameters outside PvD container form "implicit" PvD with PvD identity that
     is generated from constant parameters (not timeouts) so that same
     parameters always produce same PvD ID.
+- HTTP protocol and HTTP server on routers for delivering PvD properties
 - Python 3 with pyroute2 module for MIF-pvdman
   * Python 3 is chosen for rapid prototyping
   * module pyroute2 is used for most network related operations
@@ -262,30 +279,171 @@ Test Case:
     - d-bus is "popular" choice for communication with system services
     - NetworkManager uses d-bus (if this implementation is to be merged with it)
   * MIF-pvdman offer services
-  * MIF-aware application call services (using prived API from "api")
+  * MIF-aware application call services (using API from "api")
 - API
   * pvd_get_by_id
   * pvd_get_by_properties
   * pvd_activate
+  * pvd_reset
 
 
-5. TODO list
+6. Implementation problems, workarounds, discussion and TODOs
+-------------------------------------------------------------
+6.1. PvD information delivery
 
-- PvD information delivery
-  * RA/RS options:
-    - each RA delivers all PvD information (current implementation)
-    - RA just indicate that he has PvD information - delivery on request
-    - ...
-  * DHCP
-  * ?
-- MIF-pvdman
-  * IPv4
-  * ...
-- API
-  * permission to switch namespace to user application
-    - probably requires a little kernel modification
-  * signal client about change in PvDs on the system
-    - implementation in progress
-  * change which resolv.conf is used (should be: /etc/netns/<ns-name/resolv.conf)
-    - change glibc? library
-    - track what "ip netns exec" do (mount something) and do it in api
+6.1.1. PvD network related informations
+
+6.1.1.1. Router Advertisement messages
+
+In designed prototype only Router Advertisement messages (RA) are used.
+Modified radvd delivers all PVD information it has with each RA.
+Other possibilities are discussed in separate document.
+
+
+6.1.1.2. DHCP
+
+DHCP can be used to deliver PvD informations, but it isn't implemented since
+IPR claim was set for particular draft. Given IPR claim is too wide, any
+implementation that carry PvD information will violate it.
+If any DHCP implementation should be possible that claim must be removed.
+
+
+6.1.2. PvD properties
+
+Since question "What are PvD properties?" is unresolved, only demo properties
+are shown in this prototype, we focused on delivery mechanism.
+To us, most obvious choice was to use some other mechanism, not one used to
+deliver PvD network informations. Same mechanisms are used by web browsers to
+detect proxy servers and similar settings.
+Embedding such properties within RAs (or in future DHCP) messages might be
+problematic since those messages might grow to big.
+
+In MIF prototype routers that delivered network parameters for PvDs are also
+chosen to deliver PvD properties. They are first choice since client have their
+link-local address and can contact them even before client brings its network
+interface fully up (e.g. before assignment of its public IP address).
+Alternative, which we considered, was to add an option to RA message which can
+carry a link to URL which will provide PvD properties. However, this approach
+might require that related PvD is first brought up, and from within remote
+server contacted and PvD properties received. Similar mechanism could still be
+achieved with router which can redirect its HTTP request to remote location
+(and adding option to RA isn't required).
+
+PvD properties format used is prototype is JSON (implementation reasons).
+Similar formats, as XML, will achieve same thing.
+
+
+6.2. Using linux network namespaces
+
+Decission "why namespaces are used" is present in section 1 and design document
+Modifications on Fedora to support MIF.
+
+Required separation for PvD implementation require separation at Internet layer
+(L3), which will provide different routing and DNS (possibly different DNS
+servers) per PvD. Since no simple solution was found on L3, namespaces are used.
+However, namespaces isolate network parameters from link layer, and they impose
+some restrictions and additions to MIF PvD model.
+
+To create a PvD that will use (physical) interface, two options are available:
+1. clone interface into new one which will have its own L2 and L3 addresses and
+   other network parameters (e.g. using macvlan driver), and move only this
+   cloned interface into a new namespace created for this particular PvD
+2. move original interface into a new namespace created for this particular PvD
+First approach (clone) is used when PvDs are based on ethernet based interface,
+while second is used for special connections like VPN (as shown in demo-30).
+
+Problems encountered with linux namespaces are:
+a) L2 (and up) emulation, while L3 would be better.
+   As consequence, each PvD must have its own IP address. While this isn't big
+   problem with IPv6 addresses its not so with IPv4. We might argue that even
+   with IPv4, when local addresses are used (10.0.0.0/8, 172.16.0.0/12 and
+   192.168.0.0/16) there might be enough local addresses (with planning).
+   However, when public IPv4 addresses are used this solution isn't appropriate!
+   On the other hand, IPv6 should be future of Internet and maybe PvD could be
+   implemented with IPv6 in mind? And again, maybe some kind on lightweight
+   namespaces will appear in future operating systems, which isolate L3 and up.
+
+b) Switching between namespaces requires root privileges.
+   In current implementation of Linux namespaces, only root can create a new
+   namespace and move a process to it. This is a problem since MIF aware
+   applications are user's applications, without root privileges.
+   For now, we run applications as root.
+
+   If this issue must be resolved for MIF PvD support, it would include changes
+   in namespace privileges, adding privileges on namespaces: which user/group
+   can switch to certain namespaces. E.g. same as privileges that are set on
+   files and almost all other system resources.
+
+c) Using specific resolv.conf - specific DNS in different namespace.
+   For each namespace separate resolv.conf can be set via configuration in
+   /etc/netns/<namespace-name>/resolv.conf.
+   When starting some program in specific namespace using "ip netns exec"
+   utility, this utility performs some "mount operation" before starting program
+   in that namespace. Result of this mounting is that file
+   /var/run/resolvconf/resolv.conf is a copy of
+   /etc/netns/<namespace-name>/resolv.conf.
+   File /etc/resolv.conf which is used by namespace-unaware applications is a
+   link to /var/run/resolvconf/resolv.conf
+
+   However, when switching to some namespace from program using "setns" function
+   no such mounting is performed. And while /etc/resolv.conf is still link to
+   /var/run/resolvconf/resolv.conf, this file isn't one from
+   etc/netns/<namespace-name>.
+   Operation of "ip netns exec" should be investigated further to replicate such
+   process. Alternative is to adapt some library (glibc?) which implement DNS
+   related operations so that they first check for presence of
+   /etc/netns/<namespace-name>/resolv.conf and use it if present, before
+   checking configuration in /etc/resolv.conf
+
+
+6.3. PvD related events handling
+
+What to do when some MIF PvD related change occur while some MIF aware
+application is already running?
+There are several possibilities:
+a) do nothing
+b) signal to the application that change occurred if application is registered
+   for such events
+c) same as b) but with addition to what the change is about
+
+Issue that should be also considered here is WHEN the MIF manager detect changes.
+
+i)  New PvDs are announced by RA which are issued periodically or when something
+    goes in UP state.
+
+ii) When PvD goes down its usually because link went down (e.g. no more in Wi-Fi
+    range). Of course such event can be also announced via RAs (e.g. by setting
+    some timeout to zero in network related parameters - prefix), but it should
+    be expected that this will occur rarely.
+    Therefore, its more realistic that an application will detect PvD is down
+    before MIF manager. Maybe we should design an API which an application will
+    use to contact MIF manager and to signal it about a problem with specific
+    PvD. MIF manager can then recheck such PvD and its connections (and remove
+    it if down).
+    Or MIF manager can periodically test all PvDs (indirectly).
+
+    In current implementation network parameters have timeouts. Each new RA
+    refresh those timeouts. When timeouts expire related PvDs can be removed
+    (this feature is planned but not implemented yet).
+    Another indirect mechanism (included in prototype) is to check for router
+    state with simple ICMP message (ping). When router doesn't respond, all
+    PvDs that originate from that router are removed.
+
+Since "PvD down" event will be detected by application, more focus should be set
+on signaling "PvD up" event, when some possibly more favorable PvD is created.
+TODO
+
+6.4. MIF API
+------------
+Implementation of some test applications gave us some insight about API.
+Some API could be performed locally, inside application, without contacting MIF
+manager, while other must contact MIF manager.
+For example, for pvd_get_by_id and pvd_get_by_properties single operation from
+MIF manager is enough: mif_get_pvds. After receiving all PvDs, they can be
+filtered by id or given properties inside client application.
+APIs pvd_activate and pvd_reset are performed locally (change namespace) with
+previous *get* operations (to get namespace name with other PvD parameters).
+
+Therefore, on MIF manager side only mif_get_pvds should be enough.
+
+TODO signals
