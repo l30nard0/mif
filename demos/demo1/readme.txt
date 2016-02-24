@@ -35,15 +35,15 @@ static address configuration (as shown on Figure 1, set up with demo scripts).
           2001:db8:2::1/64|      |2001:db8:20::1/32 2001:db8:20::2/32|      |
                 fd02::1/64+------+                                   +------+
 
-                Figure 1. Network configuration in demo
+                Figure 1. Network configuration used in demos
 
-Routers R1 and R2 on client side network have public ip addresses (2001:*) but
-also local ip addresses (fd0x*, besides link-local IPv6 addresses).
+Routers R1 and R2 on client side network [VMnet2] use public IP addresses
+(2001:*) but also use private IP addresses (ULAs, fd0x*).
 
 PvDs are identified by their ID. However, since UUID is used as ID (must be
 unique), in this text shorter names are used as identifiers. For example name
 R1-PvD1 refers to first PvD provided by R1 (first is usually implicit).
-Real ID of this PvD will be different. Namespace created for this PvD will be in
+Real ID of this PvD will be different. Namespace created for this PvD will be
 named "mifpvd-x" where "x" might be 1, 2, 3, ...
 
 PvDs are defined for radvd servers as follows (*PvD1 implicit, *PvD2 explicit):
@@ -52,7 +52,7 @@ R1-PvD2: fd01::/64       {"type":["iptv", "wired"],        "bandwidth":"10 Mbps"
 R2-PvD1: 2001:db8:2::/64 {"type":["internet", "cellular"], "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
 R2-PvD2: fd02::/64       {"type":["voice", "cellular"],    "bandwidth":"1 Mbps",  "pricing":"0,01 $/MB" }
 
-Services on hosts:
+Applications/services on hosts:
 Client: MIF-pvdman + custom created applications (testapps)
 R1, R2: radvd, DNS server (bind), web server (apache2) + custom apps
 S1, S2: DNS server (bind), web server (apache2) + custom apps
@@ -69,7 +69,8 @@ Configuration is set via scripts. E.g. for R1:
   (radvd, apache2 and bind9)
 Scripts are executed with: sudo ./run.sh <command> [<host>]
 where <command> is one of "start", "stop" and "clean",
-while <host> is one of C, R1, R2, S1 and S2.
+while <host> is one of C, R1, R2, S1 and S2 (can be ommited and derived from
+host name).
 Command "stop" will stop all started services and applications.
 Command "clean" will first invoke "stop" and then restore system to previous
 state (remove created configuration files, produced custom logs, compiled
@@ -82,10 +83,11 @@ For example, services on R1 are started with: sudo ./run.sh start R1
 
 2.1. Isolation
 
-Separate PvDs could connect client with only specified destinations, while
-all other could be unavailable. For example, different services (servers)
-like "internet", "video-on-demand" could be defined through different PvDs
-that limit accessibility to only defined services.
+Single PvD can be configured for specific network only. Application that use
+this PvD will see only its network, all other will be hidden in that PvD.
+For example, different services (servers) like "internet", "video-on-demand"
+could be defined through different PvDs that limit accessibility to only defined
+services.
 
 2.1.1. Example from RFC7566: 4.3. A Home Network and a Network Operator with
                                   Multiple PvDs (page 12)
@@ -110,7 +112,7 @@ that limit accessibility to only defined services.
     Figure RFC7566-3: An Example of a Home Network and a Network Operator with
                       Multiple PvDs
 <<<<
-Using demo from Figure 1, Client can simulate both PC and Set-Top Box with
+Using network from Figure 1, Client can simulate both PC and Set-Top Box with
 two applications: one will use PvD1 to reach Internet, while second will use
 PvD2 for reaching specific Video-on-Demand Service (Figure 2).
 
@@ -174,12 +176,12 @@ Local network on S2 is the same fd02::/64 (different local network!).
 | Client +-o-+ [VMnet2]               :
 |        |   |        +------+        :                          +------+
 +---+----+   |        |      |        :     [VMnet4]             |      | fd02::/64
-    |        +------o-+  R2  +-o-------------------------------o-+  S2  +-------
-    | 2001:db8:2::1/64|      |2001:db8:20::1/32 2001:db8:20::2/32|      | remote
-    |       fd02::1/64+------+                                   +--+---+ local
-    |                                                               |     network
-    +---------------------------------------------------------------+
-VPN connection (tunnel) to remote local network fd02::/64
+    :        +------o-+  R2  +-o-------------------------------o-+  S2  +-------
+    : 2001:db8:2::1/64|      |2001:db8:20::1/32 2001:db8:20::2/32|      | remote
+    :       fd02::1/64+------+                                   +--+---+ local
+    :                                                               :     network
+    :...............................................................:
+        VPN connection (tunnel) to remote local network fd02::/64
 
                 Figure 1. Network configuration in demo
 
@@ -188,12 +190,12 @@ On client side, tunnel is moved into VPNTEST namespace.
 PvD for tunnel is added to pvdman without its involvement in network configuration.
 
 Several PvDs are used in demo. Between them are:
-- PvD for local network fd02::/64 (Cliend + R2)
+- PvD for local network fd02::/64 (Client + R2)
 - PvD for remote local network fd02::/64 (local network behind S2)
 
 Using different PvDs, different networks are used.
-This is demonstrated with downloading from web server from address fd02::1.
-When downloading from local PvD R2 is used, otherwise (remote locale) S2 is used.
+This is demonstrated by using same IP address fd02::1 in different PvDs.
+When using local PvD, R2 is used, otherwise (remote locale) S2 is used.
 
 Script for demonstration (details in demo-30-00.txt):
 - $ sudo ./demo-30-01-C+S2-tunnel.sh create
@@ -233,7 +235,8 @@ use cellular connection through mobile phone (phone could also be a client).
 Although Client from Figure 1 have single interface, availability of PvDs from
 routers R1 and R2 can simulate presence or absence of Wi-Fi signal.
 S1 and S2 represent services on Internet. For this test network from Figure 1
-should be modified so that VMnet3 and VMnet4 are the same network (VMnet3).
+should be modified so that VMnet3 and VMnet4 are connected, represent the same
+network (VMnet3).
 
                                            .....................
                                            :                   :
@@ -260,30 +263,14 @@ Enabling and disabling of R1 presence or absence of Wi-Fi can be simulated.
 When PvD1 becomes available, all new connections from PvD aware applications
 should use it, instead of PvD2 - simulate use Wi-Fi when available.
 
-Scripts: (TODO/debuging)
+Scripts:
 - demo-20-02-C-pvd-retry.sh (all demo-20* files)
-
->>> TODO
-For connections in progress there are several possibilities.
-1. Connections can be managed by MIF-pvdmanager: when more favorable PvD
-   becomes available, less favorable can be disabled. For example, when Wi-Fi
-   becomes available, Mobile 'Internet' PvD (PvD2) will be disabled and all
-   applications which use it will fail and will have to reconnect through new
-   PvD (PvD1 = Wi-Fi).
-2. Connections can be managed by application: application will be notified that
-   more favorable connection (PvD1) become available. It will be up to the
-   application to break current connection and reestablish a new one over new
-   PvD (Wi-Fi).
-<<< TODO
 
 
 2.3. Application preference
 
 When offered multiple connections, a client can choose one depending on
-connections' properties. Connection preference is up to client application
-or system policy for that application. In former case, application must
-be launched by special launcher which will chose appropriate connection (PvD)
-for specific client.
+connections' properties.
 Most of previous examples can be classified as special cases of this one.
 However, here its up to application to choose PvD that suits her best by
 comparing available PvD properties.
@@ -309,7 +296,10 @@ Scripts:
 
 2.4. Multi PvD applications
 
-PvD aware application might need several PvDs simultaneously...
+PvD aware application might need several PvDs simultaneously.
+First operation is to choose first PvD and switch to it ("activate it"), prepare
+connection (socket). Then activate second PvD and prepare connections and so on.
+Each connection should operate normally within its PvD.
 
 Scripts:
 - demo-10-01-C-multi-pvd-client-udp.sh

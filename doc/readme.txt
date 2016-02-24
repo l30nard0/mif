@@ -478,3 +478,18 @@ and single interface "mif_get_pvds" could be sufficient.
 
 TODO signals
 
+
+>>> TODO
+For connections in progress there are several possibilities.
+1. Connections can be managed by MIF-pvdmanager: when more favorable PvD
+   becomes available, less favorable can be disabled. For example, when Wi-Fi
+   becomes available, Mobile 'Internet' PvD (PvD2) will be disabled and all
+   applications which use it will fail and will have to reconnect through new
+   PvD (PvD1 = Wi-Fi).
+2. Connections can be managed by application: application will be notified that
+   more favorable connection (PvD1) become available. It will be up to the
+   application to break current connection and reestablish a new one over new
+   PvD (Wi-Fi).
+<<< TODO
+
+Use scenartios općenito
