@@ -33,11 +33,32 @@ network settings and leaves the default network namespace intact. That way, all
 the existing network management components, such as Network Manager, continue to
 work unobtrusively.
 
+ +-------------------------------------------------------+    +--------------+
+ | +---------------------------------------------------+ |    |    +-------+ |
+ | | MIF-pvdman                                        | |    | +--+ radvd | |
+ | | +-----------+     +-----------+     +-----------+ | |    | |  +-------+ |
+ | | | pvdserver +-->--+   pvdman  +--<--+ ndpclient | | |    | |            |
+ | | +-----+-----+     +-------+---+     +-----+-----+ | |    | |  +-------+ |
+ | +-------|-------------------|---------------|-------+ |    | +--+ httpd | |
+ |         |d-bus        create|configure      |RA/RS    |    | |  +-------+ |
+ | get_pvds|             delete|               |HTTP     |    | |            |
+ | +-------|-------+    +------+-------+       |         |    | |            |
+ | | +-----+-----+ |join|   network    |     --+---------+----+-+--        --+--
+ | | |  MIF API  +------+  namespace   |                 |    |              |
+ | | +-----------+ |    |  operations  |                 |    |              |
+ | |               |    +--------------+                 |    |              |
+ | |   MIF aware   |                                     |    |              |
+ | |  application  |                                     |    |              |
+ | +---------------+                        Client (PC)  |    |      Router  |
+ +-------------------------------------------------------+    +--------------+
+
+                Figure 1. MIF prototype architecture overview
+
 MIF-pvdman receives network configurations through Router Advertisement messages
-(RAs). Modified version of PvD-aware radvd is used (1). Each RA may contain one
-or more network configurations which are classified either as explicit or
-implicit PvDs. Explicit PvD is a set of coherent NDP options explicitly labeled
-with a unique PvD identifier and nested within a special NDP option called PVD
+(RAs). Modified version of PvD-aware radvd is used. Each RA may contain one or
+more network configurations which are classified either as explicit or implicit
+PvDs. Explicit PvD is a set of coherent NDP options explicitly labeled with a
+unique PvD identifier and nested within a special NDP option called PVD
 container, as described in draft-ietf-mif-mpvd-ndp-support-02
 (https://tools.ietf.org/html/draft-ietf-mif-mpvd-ndp-support-02). Multiple
 explicit PvDs may appear in a single RA, each within a different PvD container
@@ -53,14 +74,14 @@ Each PvD, either explicit or implicit, is associated with a network namespace
 with a single virtual network interface (besides the loopback) of macvlan type,
 where PvD-related network parameters are configured. To establish a connectivity
 to the outside world, virtual interface is connected to the physical interface
-on which the related PvD information is received through the RA (2). Each
-virtual interface is assigned a link-local IPv6 address (fe80::/64) and one or
-more addresses derived from Prefix Information options if present in the
-received RA (3). Besides the IP addresses, MIF-pvdman configures the routing
-tables and DNS records within the namespace. By default, a link-local and
-default route via the RA-announcing router are added to the routing table,
-regardless of the routing information received in RA. Additional routing
-information is configured if Route Information options are received in RA.
+on which the related PvD information is received through the RA. Each virtual
+interface is assigned a link-local IPv6 address (fe80::/64) and one or more
+addresses derived from Prefix Information options if present in the received RA.
+Besides the IP addresses, MIF-pvdman configures the routing tables and DNS
+records within the namespace. By default, a link-local and default route via the
+RA-announcing router are added to the routing table, regardless of the routing
+information received in RA. Additional routing information is configured if
+Route Information options are received in RA.
 Finally, for each RDNSS and DNSSL option received in RA, MIF-pvdman creates a
 record in /etc/netns/NETNS_NAME/resolv.conf, where NETNS_NAME is a name of the
 network namespace associated with the PvD.
@@ -72,9 +93,9 @@ a special PvD service running on local host. D-Bus is used to connect
 applications to PvD service. Upon PvD activation, client application is switched
 to the network namespace associated with the selected PvD. Further network
 operations (socket creation, sending and receiving data) are performed within
-that namespace (4). Once obtained by the application, socket handles are linked
-to the network namespace they were originally obtained from and continue to work
-in that namespace, regardles of whether the application switches to another
+that namespace. Once obtained by the application, socket handles are linked to
+the network namespace they were originally obtained from and continue to work in
+that namespace, regardles of whether the application switches to another
 namespace at some time later. This enables the application to use multiple PvDs
 simultaneously. The only requirement is that the application is running within a
 proper network namespace while obtaining a socket.
@@ -86,16 +107,8 @@ within a given namespace, it should be started with:
 
     ip netns exec <pvd-namespace-name> <command with args>
 
-(1) Modified PvD-aware radvd service is used
-    https://github.com/dskvorc/mif-radvd
-(2) Possibility for future extensions: if multiple PvDs should be grouped
-    together for some reason, more virtual interfaces could be created per
-    network namespace.
-(3) Possibility (maybe/to be tested): maybe same IP address could be used in
-    different PvDs (namespaces/interfaces) if they have different gateway
-    (assuming kernel can forward received IP packet based on that).
-(4) Problem: changing network namespace requires root privileges. Until more
-    appropriate solution is found, applications are run as root.
+or they can be started with launchers pvd_run and pvd_prop_run (detailed later).
+
 
 2. PvD Properties
 -----------------
@@ -189,8 +202,10 @@ Service on client - MIF-pvdman:
     - responds to d-bus requests from client applications and sends them PvD
       information back
 
+
 4. Using MIF prototype
 ----------------------
+
 4.1. Legacy, PvD unaware applications
 
 To use PvDs an PvD unaware applications should be started:
@@ -208,6 +223,7 @@ To use PvDs an PvD unaware applications should be started:
             wget http://www.pvd1.org
 
 4.2. MIF aware applications
+
 MIF aware applications are created using C API, from directory "api".
 Sample application are presented in directory "testapps".
 
@@ -289,6 +305,7 @@ output from test runs.
 
 6. Implementation problems, workarounds, discussion and TODOs
 -------------------------------------------------------------
+
 6.1. PvD information delivery
 
 6.1.1. PvD network related informations
@@ -333,26 +350,43 @@ PvD properties format used is prototype is JSON (implementation reasons).
 Similar formats, as XML, will achieve same thing.
 
 
-6.2. Using linux network namespaces
+6.2. Using Linux network namespaces
 
 Decission "why namespaces are used" is present in section 1 and design document
-Modifications on Fedora to support MIF.
+Modifications on Fedora to support MIF. Some may argue that this is to specific
+choice working only on Linux. However, since Android is based on Linux, systems
+that could potentially implement presented MIF managment are very numerous.
+
+Linux network namespace mechanism is used to separate network stack from link
+layer (L2) up. Its introduced as a container mechanism which allows process and
+network isolation for special applications (e.g. instead of using "whole Linux
+operating system" in sparate virtual machine, a container is created using
+namespaces and an application is run within).
 
 Required separation for PvD implementation require separation at Internet layer
 (L3), which will provide different routing and DNS (possibly different DNS
 servers) per PvD. Since no simple solution was found on L3, namespaces are used.
-However, namespaces isolate network parameters from link layer, and they impose
-some restrictions and additions to MIF PvD model.
+Namespaces are simple ("elegant") solution, but maybe too strong and demanding
+for operating system (or maybe not).
+Furthermore, namespaces isolate network parameters from link layer, and they
+impose some restrictions and additions to MIF PvD model.
 
 To create a PvD that will use (physical) interface, two options are available:
-1. clone interface into new one which will have its own L2 and L3 addresses and
+1. Clone interface into new one which will have its own L2 and L3 addresses and
    other network parameters (e.g. using macvlan driver), and move only this
-   cloned interface into a new namespace created for this particular PvD
-2. move original interface into a new namespace created for this particular PvD
+   cloned interface into a new namespace created for this particular PvD.
+2. Move original interface into a new namespace created for this particular PvD.
 First approach (clone) is used when PvDs are based on ethernet based interface,
 while second is used for special connections like VPN (as shown in demo-30).
+The second approach changes "root" namespace since interface is moved out of it.
+However, such connection is "special", and separating it from the rest is for
+benefit of the system since it might have conflicting parameters with other
+interfaces (e.g. when VPN is used to connect with a remote network that has the
+same prefix as client's local network).
+If interface isn't such special one, moving it out of "root" namespace might not
+be the best idea - other solutions should be used (maybe using bridges).
 
-Problems encountered with linux namespaces are:
+Problems encountered with Linux namespaces are:
 a) L2 (and up) emulation, while L3 would be better.
    As consequence, each PvD must have its own IP address. While this isn't big
    problem with IPv6 addresses its not so with IPv4. We might argue that even
@@ -433,17 +467,14 @@ Since "PvD down" event will be detected by application, more focus should be set
 on signaling "PvD up" event, when some possibly more favorable PvD is created.
 TODO
 
+
 6.4. MIF API
 ------------
-Implementation of some test applications gave us some insight about API.
-Some API could be performed locally, inside application, without contacting MIF
-manager, while other must contact MIF manager.
-For example, for pvd_get_by_id and pvd_get_by_properties single operation from
-MIF manager is enough: mif_get_pvds. After receiving all PvDs, they can be
-filtered by id or given properties inside client application.
-APIs pvd_activate and pvd_reset are performed locally (change namespace) with
-previous *get* operations (to get namespace name with other PvD parameters).
-
-Therefore, on MIF manager side only mif_get_pvds should be enough.
+MIF API consists of several methods. Most methods first contact MIF-pvdman to
+obtain a list of PvDs and then performe some operations on them: select one PvD
+and switch to that PvD. Other methods (like pvd_reset) doesn't use MIF-pvdman.
+In this scenario, MIF-pvdman just serves information about PvDs to application,
+and single interface "mif_get_pvds" could be sufficient.
 
 TODO signals
+
