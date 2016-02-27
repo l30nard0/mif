@@ -6,7 +6,7 @@
  * usage: multi_pvd_echo_client pvd1 server1 port1 pvd2 server2 port2
  *
  * example:
- * $ ./multi_pvd_echo_client \
+ * $ sudo ./multi_pvd_echo_client \
      f037ea62-ee4f-44e4-825c-16f2f5cc9b3f 2001:db8:10::2 20000 \
      f037ea62-ee4f-44e4-825c-16f2f5cc9b3e 2001:db8:20::2 20000
  */

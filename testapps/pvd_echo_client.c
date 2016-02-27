@@ -6,7 +6,8 @@
  * usage: pvd_echo_client server port
  *
  * example:
- * $ ./pvd_echo_client <address> <port>
+ * $ sudo ./pvd_echo_client 2001:db8:10::2 20000
+ * $ sudo ./pvd_echo_client fe80::20c:29ff:fe16:a042%eno16777736 20000
  */
 
 #include <stdio.h>

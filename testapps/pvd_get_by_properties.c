@@ -1,18 +1,16 @@
-//for testing with dbus-service.py or main.py from pvdman
+/*
+ * usage: ./pvd_get_by_properties properties
+ * - propertis must be json string
+ * - example: {"type":"general", "pricing":"free", "name":"default", "id"=...}
+ * - use escape sequences on ", eg.:
+ *   $ ./pvd_get_by_properties "{\"type\":\"general\"}"
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pvd_api.h>
-
-/*
- * usage: ./pvd_get_by_properties properties
- * - propertis must be json string
- * - example: {"type":"general", "pricing":"free", "name":"default", "id"=...}
- * - use escape sequences on ", eg.:
- *   ../pvd_get_by_properties {\"type\":\"general\"}
- */
 
 int main ( int argc, char *argv[] )
 {

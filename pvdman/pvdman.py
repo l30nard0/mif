@@ -79,6 +79,7 @@ class PvdManager:
     atexit.register(self.cleanup)
 
     self.operation_in_progress = False # debugging...
+    self.pvdserver = None
 
     LOG.debug('cleanup handler initialized')
     LOG.debug('PvdManager initialization finished')
@@ -314,6 +315,7 @@ class PvdManager:
         # if PvD configuration completed successfully, add PvD record to the PvD manager's log
         self.pvds[(phyIfaceName, pvd.pvdId)] = pvd
         LOG.info('PvD {0} received through {1} CONFIGURED in network namespace {2} on macvlan {3}, type {4}'.format(pvd.pvdId, pvd.phyIfaceName, pvd.netnsName, pvd.pvdIfaceName, pvd.pvdInfo.pvdType))
+        self.pvdserver.stateChanged ("new_pvd", pvdInfo.pvdId)
       else:
         raise Exception('PvD duplicate error: PvD {0} is already configured on {1}'.format(pvdInfo.pvdId, phyIfaceName))
     else:
@@ -339,6 +341,7 @@ class PvdManager:
         pvd.pvdInfo = pvdInfo
         pvd.updateTimestamp()
         LOG.info('PvD {0} received through {1} RECONFIGURED in network namespace {2} on macvlan {3}, type {4}'.format(pvd.pvdId, pvd.phyIfaceName, pvd.netnsName, pvd.pvdIfaceName, pvd.pvdInfo.pvdType))
+        self.pvdserver.stateChanged ("updated", pvdInfo.pvdId)
     else:
       raise Exception('There is no PvD {0} configured on {1}'.format(pvdInfo.pvdId, phyIfaceName))
 
@@ -356,6 +359,8 @@ class PvdManager:
       # remove the PvD record from the PvD manager's log
       del self.pvds[(phyIfaceName, pvdId)]
       LOG.info('PvD {0} received through {1} REMOVED, network namespace {2} deleted, DNS directory {3} deleted, type {4}'.format(pvd.pvdId, pvd.phyIfaceName, pvd.netnsName, dnsConfDir, pvd.pvdInfo.pvdType))
+      self.pvdserver.stateChanged ("deleted", pvdId)
+
     else:
       raise Exception('There is no PvD {0} configured on {1}'.format(pvdInfo.pvdId, phyIfaceName))
 

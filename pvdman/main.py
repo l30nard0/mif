@@ -70,6 +70,7 @@ if __name__ == "__main__":
 	dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 	apiDBUSResponder = PvdApiServer(pvdman)
 	print ( "PvdApiServer Initialized" )
+	pvdman.pvdserver = apiDBUSResponder
 
 	# create ndpclient object and register socket for events
 	ndpc = NDPClient( iface = arg.iface )

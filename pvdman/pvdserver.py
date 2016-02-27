@@ -70,9 +70,8 @@ class PvdApiServer ( dbus.service.Object ):
 		return self.__format_pvds_for_reply (p)
 
 	@dbus.service.signal('org.freedesktop.PvDManager')
-	def stateChanged ( self, message ):
-		# call it like self.stateChanged ( pvd_id ) # id of pvd which changed
-		# TODO
+	def stateChanged ( self, event, pvd_id ):
+		# call it when some change occurs
 		pass
 
 	@dbus.service.method('org.freedesktop.PvDManager')

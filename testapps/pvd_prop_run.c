@@ -1,18 +1,17 @@
-//for testing with dbus-service.py or main.py from pvdman
+/*
+ * usage: sudo ./pvd_prop_run properties command-to-execute [parameters]
+ * - properties must be json string
+ * - example: {"type":"internet", "pricing":"free", "name":"default", "id"=...}
+ * - use escape sequences on ", eg.:
+ *   $ sudo ./pvd_prop_run "{\"type\":\"internet\"}" \
+ *     firefox http://www.s1.org/swtrailer.mp4
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pvd_api.h>
-
-/*
- * usage: ./pvd_prop_run properties command-to-execute [parameters]
- * - propertis must be json string
- * - example: {"type":"internet", "pricing":"free", "name":"default", "id"=...}
- * - use escape sequences on ", eg.:
- *   ../pvd_prop_run {\"type\":\"internet\"} firefox http://www.s1.org/swtrailer.mp4
- */
 
 int main ( int argc, char *argv[] )
 {
@@ -59,5 +58,4 @@ int main ( int argc, char *argv[] )
 	execvp ( args[0], args );
 	perror ( "Error executing execvp" );
 	return -1;
-	return 0;
 }

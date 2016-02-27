@@ -210,18 +210,18 @@ static void _callback ( GDBusConnection *connection,
 	const gchar *interface_name, const gchar *signal_name,
 	GVariant *parameters, gpointer callback )
 {
-	GVariant *value;
-	const gchar *id;
-	void (*cb)(char *);
+	const gchar *cmd, *id;
+	void (*cb)(char *, char *);
+
+	g_variant_get ( parameters, "(&s&s)", &cmd, &id );
+	//printf ( "Received signal with values: %s %s\n", cmd, id );
 
 	cb = callback;
-	g_variant_get ( value, "(&s)", &id );
-
 	if ( cb )
-		cb ( (char*) id );
+		cb ( (char*) cmd, (char*) id );
 }
 
-int pvd_register_signal ( void (*callback) ( char *pvd_id ) )
+int pvd_register_signal ( void (*callback) ( char *action, char *pvd_id ) )
 {
 	GDBusConnection *connection;
 	guint si;
@@ -231,7 +231,9 @@ int pvd_register_signal ( void (*callback) ( char *pvd_id ) )
 		return -1;
 
 	si = g_dbus_connection_signal_subscribe ( connection, NULL, INTERFACE_NAME,
-		NULL, OBJECT_PATH, NULL, G_DBUS_CALL_FLAGS_NONE, _callback, callback, NULL );
+		"stateChanged", OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+		_callback, callback, NULL );
+
 	return si;
 }
 

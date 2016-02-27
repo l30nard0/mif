@@ -1,12 +1,10 @@
-//for testing with dbus-service.py or main.py from pvdman
+/* usage: sudo ./pvd_run pvd-id command-to-execute [parameters] */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pvd_api.h>
-
-/* usage: sudo ./example pvd-id command-to-execute [parameters] */
 
 int main ( int argc, char *argv[] )
 {

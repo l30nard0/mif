@@ -1,12 +1,10 @@
-//for testing with dbus-service.py or main.py from pvdman
+/* usage: ./pvd_get_by_id pvd-id */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pvd_api.h>
-
-/* usage: sudo ./example pvd-id */
 
 int main ( int argc, char *argv[] )
 {
