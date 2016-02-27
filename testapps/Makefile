@@ -7,7 +7,7 @@ GFLAGS = `pkg-config --cflags --libs gobject-2.0 glib-2.0 gio-2.0`
 CFLAGS = -Wall $(INCLUDE)
 LDFLAGS = $(LIBPATH) -l$(LIB) $(GFLAGS)
 
-PVDLIB = .$(API)/libpvd.a
+PVDLIB = $(API)/libpvd.a
 
 SOURCES := $(wildcard *.c)
 TARGETS := $(SOURCES:.c=)
