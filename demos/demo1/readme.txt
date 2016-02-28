@@ -183,7 +183,7 @@ Local network on S2 is the same fd02::/64 (different local network!).
     :...............................................................:
         VPN connection (tunnel) to remote local network fd02::/64
 
-                Figure 1. Network configuration in demo
+                Figure 3. Network configuration in demo with VPN
 
 Tunnel is created by script on both sides (Client and S2).
 On client side, tunnel is moved into VPNTEST namespace.
@@ -265,6 +265,7 @@ should use it, instead of PvD2 - simulate use Wi-Fi when available.
 
 Scripts:
 - demo-20-02-C-pvd-retry.sh (all demo-20* files)
+- demo-21-02-C-pvd-retry.sh (all demo-21* files)
 
 
 2.3. Application preference

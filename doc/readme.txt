@@ -11,7 +11,7 @@ Contents
 3. Overview of Development Environment
 4. Using MIF prototype
 5. Summary of design decisions used in implementation
-6. Implementation problems, workarounds and TODOs
+6. Implementation problems, options, workarounds, discussion and TODOs
 
 1. Architecture Overview and Implementation Details
 ---------------------------------------------------
@@ -47,7 +47,7 @@ work unobtrusively.
  | | |  MIF API  +------+  namespace   |                 |    |              |
  | | +-----------+ |    |  operations  |                 |    |              |
  | |               |    +--------------+                 |    |              |
- | |   MIF aware   |                                     |    |              |
+ | |   PvD aware   |                                     |    |              |
  | |  application  |                                     |    |              |
  | +---------------+                        Client (PC)  |    |      Router  |
  +-------------------------------------------------------+    +--------------+
@@ -55,7 +55,7 @@ work unobtrusively.
                 Figure 1. MIF prototype architecture overview
 
 MIF-pvdman receives network configurations through Router Advertisement messages
-(RAs). Modified version of PvD-aware radvd is used. Each RA may contain one or
+(RAs). Modified version of PvD aware radvd is used. Each RA may contain one or
 more network configurations which are classified either as explicit or implicit
 PvDs. Explicit PvD is a set of coherent NDP options explicitly labeled with a
 unique PvD identifier and nested within a special NDP option called PVD
@@ -64,7 +64,7 @@ container, as described in draft-ietf-mif-mpvd-ndp-support-02
 explicit PvDs may appear in a single RA, each within a different PvD container
 option, as long as they are labeled with different PvD identifiers. Implicit PvD
 is just another name for top-level NDP options placed outside the PvD container
-option, as in regular non-PvD-aware router advertisements. Since implicit PvDs
+option, as in regular PvD unaware router advertisements. Since implicit PvDs
 are not labeled with PvD identifier, MIF-pvdman automatically generates an
 identifier for internal use and configures the implicit PvD on the host in the
 same way as if it was the explicit one. Only one implicit PvD is allowed per RA.
@@ -86,7 +86,7 @@ Finally, for each RDNSS and DNSSL option received in RA, MIF-pvdman creates a
 record in /etc/netns/NETNS_NAME/resolv.conf, where NETNS_NAME is a name of the
 network namespace associated with the PvD.
 
-PvD-aware client application uses PvD API to get a list of available PvDs
+PvD aware client application uses PvD API to get a list of available PvDs
 configured on the local host, and activate chosen PvD to use it for
 communication. Information about configured PvDs are exposed to applications by
 a special PvD service running on local host. D-Bus is used to connect
@@ -100,7 +100,7 @@ namespace at some time later. This enables the application to use multiple PvDs
 simultaneously. The only requirement is that the application is running within a
 proper network namespace while obtaining a socket.
 
-Non-PvD aware clients operate as before. Although they are not able to use PvD
+PvD unaware clients operate as before. Although they are not able to use PvD
 API to select a certain PvD, they can still be forced to use a specific PvD by
 starting them in a network namespace associated with that PvD. To run a program
 within a given namespace, it should be started with:
@@ -112,7 +112,7 @@ or they can be started with launchers pvd_run and pvd_prop_run (detailed later).
 
 2. PvD Properties
 -----------------
-With RA messages routers provides network relate parameters for PvDs.
+With RA messages routers provides network related parameters for PvDs.
 Other parameters (in this "draft" called "properties") are also provided by
 router, but only on request, using HTTP protocol on router's link-local address,
 using port 8080.
@@ -179,7 +179,7 @@ behind routers are used in some demonstrations.
 In our experiments, we used virtual machines hosted in VMware Player.
 
 Services on routers (Rx) and servers (Sx):
-- radvd (PvD-aware NDP server) (only on routers):
+- radvd (PvD aware NDP server) (only on routers):
   * https://github.com/dskvorc/mif-radvd
 - web server (httpd, apache2)
 - DNS server (bind)
@@ -206,9 +206,19 @@ Service on client - MIF-pvdman:
 4. Using MIF prototype
 ----------------------
 
+MIF API consists of several methods. Most methods first contact MIF-pvdman to
+obtain a list of PvDs and then performe some operations on them: select one PvD
+and switch to that PvD. Other methods (like pvd_reset) doesn't use MIF-pvdman.
+In this scenario, MIF-pvdman just serves information about PvDs to applications
+synchronously on request or via signals (to notify a client about some change).
+Therefore, two operations are required from MIF-pvdman, to provide PvD
+information when requested ("get" functions) and to send a signal (over d-bus)
+when something changed in PvDs.
+
+
 4.1. Legacy, PvD unaware applications
 
-To use PvDs an PvD unaware applications should be started:
+To use PvDs, a PvD unaware applications should be started:
 
   * with: ip netns exec
     $ ip netns exec <namespace-name> <application-name> [arguments...]
@@ -222,24 +232,25 @@ To use PvDs an PvD unaware applications should be started:
       e.g.: pvd_prop_run "{\"type\": \"internet\", \"pricing\": \"free\"}" \
             wget http://www.pvd1.org
 
-4.2. MIF aware applications
+4.2. PvD aware applications
 
-MIF aware applications are created using C API, from directory "api".
+PvD aware applications are created using C API, from directory "api".
 Sample application are presented in directory "testapps".
 
 Properties of API:
 - API is written for C programming language
-- requires glib2-devel package
-- uses d-bus to connect to MIF-pvdman (with its module pvdserver.py)
+- requires glib2-devel package (for d-bus communications)
+- uses d-bus to connect to MIF-pvdman
 - methods provided by API:
   * pvd_get_by_id - get a list of PvDs which id matches (contains) given string
   * pvd_get_by_properties - get a list of PvDs which have requested properties
   * pvd_activate:
-    - retrieve PvD with given id
-    - TODO: MIF-pvdman should save information about which PvDs are used
+    - retrieve PvD with given id (confirm that such PvD exist)
     - switch calling thread (process) into given PvD (namespace)
   * pvd_reset - switch application back to default namespace (not managed by
     MIF-pvdman)
+  * pvd_register_signal - register a function to be called when some change in
+    PvDs happens (signal is sent by MIF-pvdman)
 
 API usage reccomentations/steps
 1. Use calls to pvd_get_by_id/pvd_get_by_properties to get desired PvD Id.
@@ -251,11 +262,12 @@ API usage reccomentations/steps
 Switching to another PvD will not affect already opened and prepared socket.
 Opening socket in another PvD (besides already opened ones) should follow the
 same procedure: steps 1 to 6.
-As long as PvD socket was created in is operational, other network related
-operations like send and receive on that socket should work as expected, in
-selected PvD.
+Operations like send and receive on sockets prepared for different PvDs should
+work simultaneously, as expected, as long as PvD is functional (in our
+implementaion as long as related network namespace is up and its interfaces are
+up and connected).
 
-Test applications prepared in "testapps" should be compiled with make [appname]
+Test applications prepared in "testapps" should be compiled with: make [appname]
 and started with: sudo ./appname [arguments]
 
 Demonstration test cases are presented in directory "demos", along with sample
@@ -280,31 +292,29 @@ output from test runs.
   * Parameters outside PvD container form "implicit" PvD with PvD identity that
     is generated from constant parameters (not timeouts) so that same
     parameters always produce same PvD ID.
-- HTTP protocol and HTTP server on routers for delivering PvD properties
-- Python 3 with pyroute2 module for MIF-pvdman
+- HTTP protocol and HTTP server on routers are used for delivering PvD properties
+- Python 3 with pyroute2 module is used for MIF-pvdman implementation
   * Python 3 is chosen for rapid prototyping
   * module pyroute2 is used for most network related operations
-- IPv6 address family
+- IPv6 address family only
   * since RAs are used, implementation is started for IPv6
-  * adding support for IPv4 would require (best guess):
-    - PvD information with IPv4 network parameters (DHCP, file from router, ...)
-    - changes in MIF-pvdman
-    - dual stack PvDs
-- D-bus for communication with client MIF-aware applications
+  * generating a new IPv6 address (for new virtual interface) isn't problematic
+- D-bus for communication with client PvD aware applications
   * why:
     - d-bus is "popular" choice for communication with system services
     - NetworkManager uses d-bus (if this implementation is to be merged with it)
   * MIF-pvdman offer services
-  * MIF-aware application call services (using API from "api")
+  * PvD aware application call services (using API from "api")
 - API
   * pvd_get_by_id
   * pvd_get_by_properties
   * pvd_activate
   * pvd_reset
+  * pvd_register_signal
 
 
-6. Implementation problems, workarounds, discussion and TODOs
--------------------------------------------------------------
+6. Implementation problems, options, workarounds, discussion and TODOs
+-----------------------------------------------------------------------
 
 6.1. PvD information delivery
 
@@ -314,26 +324,27 @@ output from test runs.
 
 In designed prototype only Router Advertisement messages (RA) are used.
 Modified radvd delivers all PVD information it has with each RA.
-Other possibilities are discussed in separate document.
+Other possibilities are discussed in separate document (draft).
 
 
 6.1.1.2. DHCP
 
 DHCP can be used to deliver PvD informations, but it isn't implemented since
-IPR claim was set for particular draft. Given IPR claim is too wide, any
+IPR claim was set for particular draft. Since that IPR claim is very broad, any
 implementation that carry PvD information will violate it.
-If any DHCP implementation should be possible that claim must be removed.
+For DHCP implementation to be possible that IPR claim must be refuted.
 
 
 6.1.2. PvD properties
 
 Since question "What are PvD properties?" is unresolved, only demo properties
-are shown in this prototype, we focused on delivery mechanism.
+are shown in this prototype. The focus was on delivery mechanism and PvD
+selection based on some filters.
 To us, most obvious choice was to use some other mechanism, not one used to
 deliver PvD network informations. Same mechanisms are used by web browsers to
 detect proxy servers and similar settings.
 Embedding such properties within RAs (or in future DHCP) messages might be
-problematic since those messages might grow to big.
+problematic since those messages might become too long.
 
 In MIF prototype routers that delivered network parameters for PvDs are also
 chosen to deliver PvD properties. They are first choice since client have their
@@ -346,22 +357,22 @@ server contacted and PvD properties received. Similar mechanism could still be
 achieved with router which can redirect its HTTP request to remote location
 (and adding option to RA isn't required).
 
-PvD properties format used is prototype is JSON (implementation reasons).
+JSON format is used for describing PvD properties.
 Similar formats, as XML, will achieve same thing.
 
 
 6.2. Using Linux network namespaces
 
 Decission "why namespaces are used" is present in section 1 and design document
-Modifications on Fedora to support MIF. Some may argue that this is to specific
-choice working only on Linux. However, since Android is based on Linux, systems
+Modifications on Fedora to support MIF. Some may argue that this is too specific
+choice applicable only on Linux. However, since Android is based on Linux, systems
 that could potentially implement presented MIF managment are very numerous.
 
 Linux network namespace mechanism is used to separate network stack from link
 layer (L2) up. Its introduced as a container mechanism which allows process and
 network isolation for special applications (e.g. instead of using "whole Linux
 operating system" in sparate virtual machine, a container is created using
-namespaces and an application is run within).
+namespaces and an isolated application is run within).
 
 Required separation for PvD implementation require separation at Internet layer
 (L3), which will provide different routing and DNS (possibly different DNS
@@ -384,7 +395,7 @@ benefit of the system since it might have conflicting parameters with other
 interfaces (e.g. when VPN is used to connect with a remote network that has the
 same prefix as client's local network).
 If interface isn't such special one, moving it out of "root" namespace might not
-be the best idea - other solutions should be used (maybe using bridges).
+be the best idea - other solutions should be used (maybe using a bridge).
 
 Problems encountered with Linux namespaces are:
 a) L2 (and up) emulation, while L3 would be better.
@@ -393,13 +404,10 @@ a) L2 (and up) emulation, while L3 would be better.
    with IPv4, when local addresses are used (10.0.0.0/8, 172.16.0.0/12 and
    192.168.0.0/16) there might be enough local addresses (with planning).
    However, when public IPv4 addresses are used this solution isn't appropriate!
-   On the other hand, IPv6 should be future of Internet and maybe PvD could be
-   implemented with IPv6 in mind? And again, maybe some kind on lightweight
-   namespaces will appear in future operating systems, which isolate L3 and up.
 
 b) Switching between namespaces requires root privileges.
    In current implementation of Linux namespaces, only root can create a new
-   namespace and move a process to it. This is a problem since MIF aware
+   namespace and move a process to it. This is a problem since PvD aware
    applications are user's applications, without root privileges.
    For now, we run applications as root.
 
@@ -416,13 +424,13 @@ c) Using specific resolv.conf - specific DNS in different namespace.
    in that namespace. Result of this mounting is that file
    /var/run/resolvconf/resolv.conf is a copy of
    /etc/netns/<namespace-name>/resolv.conf.
-   File /etc/resolv.conf which is used by namespace-unaware applications is a
+   File /etc/resolv.conf which is used by namespace unaware applications is a
    link to /var/run/resolvconf/resolv.conf
 
-   However, when switching to some namespace from program using "setns" function
+   However, when switching to some namespace from program using "setns" function,
    no such mounting is performed. And while /etc/resolv.conf is still link to
-   /var/run/resolvconf/resolv.conf, this file isn't one from
-   etc/netns/<namespace-name>.
+   /var/run/resolvconf/resolv.conf, this file isn't the one from
+   /etc/netns/<namespace-name>.
    Operation of "ip netns exec" should be investigated further to replicate such
    process. Alternative is to adapt some library (glibc?) which implement DNS
    related operations so that they first check for presence of
@@ -432,13 +440,13 @@ c) Using specific resolv.conf - specific DNS in different namespace.
 
 6.3. PvD related events handling
 
-What to do when some MIF PvD related change occur while some MIF aware
+What to do when some MIF PvD related change occur while some PvD aware
 application is already running?
 There are several possibilities:
 a) do nothing
 b) signal to the application that change occurred if application is registered
    for such events
-c) same as b) but with addition to what the change is about
+c) same as b) but with additional parameters which will describe the change
 
 Issue that should be also considered here is WHEN the MIF manager detect changes.
 
@@ -460,7 +468,7 @@ ii) When PvD goes down its usually because link went down (e.g. no more in Wi-Fi
     refresh those timeouts. When timeouts expire related PvDs can be removed
     (this feature is planned but not implemented yet).
     Another indirect mechanism (included in prototype) is to check for router
-    state with simple ICMP message (ping). When router doesn't respond, all
+    state with simple ICMP message ("ping"). When router doesn't respond, all
     PvDs that originate from that router are removed.
 
 Since "PvD down" event will be detected by application, more focus should be set
@@ -468,28 +476,87 @@ on signaling "PvD up" event, when some possibly more favorable PvD is created.
 TODO
 
 
-6.4. MIF API
-------------
-MIF API consists of several methods. Most methods first contact MIF-pvdman to
-obtain a list of PvDs and then performe some operations on them: select one PvD
-and switch to that PvD. Other methods (like pvd_reset) doesn't use MIF-pvdman.
-In this scenario, MIF-pvdman just serves information about PvDs to application,
-and single interface "mif_get_pvds" could be sufficient.
+6.4. Handling events
 
-TODO signals
+There are several events that should be considered by PvD aware architecture.
 
 
->>> TODO
-For connections in progress there are several possibilities.
-1. Connections can be managed by MIF-pvdmanager: when more favorable PvD
-   becomes available, less favorable can be disabled. For example, when Wi-Fi
-   becomes available, Mobile 'Internet' PvD (PvD2) will be disabled and all
-   applications which use it will fail and will have to reconnect through new
-   PvD (PvD1 = Wi-Fi).
-2. Connections can be managed by application: application will be notified that
-   more favorable connection (PvD1) become available. It will be up to the
-   application to break current connection and reestablish a new one over new
-   PvD (Wi-Fi).
-<<< TODO
+6.4.1. New PvD is created
 
-Use scenartios općenito
+When a new PvD is created by MIF-pvdman (e.g. as a result of new RAs), a signal
+is sent to all PvD aware applications that are registered for that signal.
+What will an application do on such signal its up to that application.
+
+PvD unaware application doesn't use PvD and will continue to run as before.
+
+PvD unaware application that were started with a launcher (pvd_run or
+ip netns exec) in certain PvD will continue to run in that "old" PvD.
+If new PvD is "better" than "old" one (defined by some system policy!) and
+application must be forced to use it, there are several possibilities.
+1. Restart (stop and start) application in new PvD.
+   Easiest to implement but very "aggressive" toward application.
+2. Replace old PvD with new one: reset network related parameters (interfaces)
+   in old PvD so that they match a new PvD, forcing the application to reopen
+   connections (this time using updated PvD).
+
+
+6.4.2. Existing PvD is removed
+
+Removing a PvD will cause a failure in network related operations (in that PvD)
+in all applications that use that PvD.
+
+PvD aware applications should reselect PvD for their operations or quit if no
+appropriate was found.
+
+PvD unaware applications don't use PvD and will continue to run as before.
+
+PvD unaware applications started with launcher in that PvD will fail in every
+network related operations.
+MIF PvD manager could replace that PvD with another one (if this is defined
+with some system policy and appropriate substitute PvD exist). Application will
+then be able to restart its network connections and operate within substitute
+PvD (which replaced removed one).
+
+
+6.4.3. Existing PvD is changed
+
+Action are depending on the "change" in PvD. Some application might fail in
+their network operations and some will continue to operate normally.
+
+PvD aware applications will receive a signal about that change and can adapt
+accordingly.
+
+PvD unaware applications don't use PvD and will continue to run as before.
+
+PvD unaware applications started with launcher in that PvD will run as before
+or temporarely fail (break and restart connection) or abort (exit). As in
+previous scenarios, MIF PvD manager could, based on some system policy, so
+something, like replace changed PvD with another one, if current doesn't satisfy
+some requirements.
+
+
+6.5. IPv4
+
+For various reasons, IPv4 MIF PvD support isn't implemented.
+Main reasons include:
+- no mechanism for delivery PvD information for IPv4 (since DHCP isn't used)
+- each virtual interface created for PvD requires an IP address
+- development time
+
+Adding support for IPv4 into MIF-pvdman shouldn't require too much effort since
+same functions could be used as with IPv6, and most will automatically detect
+IP family (4 or 6).
+
+Mechanism for delivering IPv4 network parameters must be defined and an IPv4
+address must be provided. E.g. if DHCP is to be used, it will have to provide
+an IP address for each PvD (for current implementation using network namespaces).
+Since IPv4 address pool is limited (already exhausted) this isn't viable
+solution for networks that use public IPv4 addresses.
+When private (local) addresses are used, a larger address pool should be
+allocated since each node (computer) might require several IP addresses.
+
+If IPv4 address pool isn't a problem, implementation of IPv4 into MIF-pvdman
+should be relatively simple.
+
+Creating dual stack PvDs won't be a problem since it just requires to add
+additional IP address to the same interface.
