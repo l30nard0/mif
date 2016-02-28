@@ -14,8 +14,8 @@ COMMAND=$1
 DEV0=eno16777736 # device that should be turned off during tests
 DEV1=eno33554984 # first device used in tests
 
-DEMOHOME=../${0%/*}
-REPOROOT=$DEMOHOME/../..
+DEMOHOME=$(dirname $(cd $(dirname "$0"); pwd))
+REPOROOT=$(dirname $(dirname "$DEMOHOME"))
 TMPDIR=$DEMOHOME/__mif_cache__
 TESTAPPS=$REPOROOT/testapps
 PVDMAN=$REPOROOT/pvdman

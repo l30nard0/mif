@@ -24,11 +24,11 @@ def ndp_pending ( fd, cond, ndpc, pvdman ):
 	return True
 
 # check routers
-ALIVE_TIMEOUT=10
+ALIVE_TIMEOUT=20
 def pvd_ping ( *args ):
 	if pvd_ping.cnt > 0:
 		pvdman, ndpc = args
-		retry = set()
+		#retry = set()
 
 		# send ping to all routers
 		for pvd_key in list(pvdman.pvds):
@@ -39,11 +39,11 @@ def pvd_ping ( *args ):
 			if os.system(cmd) != 0:
 				#host not responding
 				pvdman.removePvd ( phyIfaceName, pvdId )
-				retry.add ( ( phyIfaceName, routerAddress ) )
+				#retry.add ( ( phyIfaceName, routerAddress ) )
 
 		# retry with RS
-		for phyIfaceName, routerAddress in retry:
-			ndpc.send_rs ( iface = phyIfaceName, dest = routerAddress )
+		#for phyIfaceName, routerAddress in retry:
+		#	ndpc.send_rs ( iface = phyIfaceName, dest = routerAddress )
 
 	# set timer again
 	t = threading.Timer ( ALIVE_TIMEOUT, pvd_ping, args )

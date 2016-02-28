@@ -1,0 +1,89 @@
+$ sudo ./pvd_echo_client_signal 2001:db8:10::2 20000
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-1
+1 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+2 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+3 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+4 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+5 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+6 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+7 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+8 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+9 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+10 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+11 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+12 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+13 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+14 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+15 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+16 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+17 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+18 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+19 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+20 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+21 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+22 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+Received signal with values: new_pvd acc0370c-3f30-3519-6265-61aba9d9c3bd
+Received signal with values: new_pvd f037ea62-ee4f-44e4-825c-16f2f5cc9b3f
+23 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+24 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+25 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+26 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+27 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+28 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+29 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+30 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+31 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+32 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+33 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+34 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+35 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+36 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+37 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+38 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+39 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+40 using mifpvd-3 {"type":"internet", "pricing":"free"} (pvds in system: mifpvd-1 mifpvd-2 mifpvd-3 mifpvd-4)
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+recvfrom: Resource temporarily unavailable
+Retrying...
+Connected with properties {"type":"internet", "pricing":"free"} to mifpvd-3
+Received signal with values: deleted f037ea62-ee4f-44e4-825c-16f2f5cc9b3f
+recvfrom: Resource temporarily unavailable
+Retrying...
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-1
+Received signal with values: deleted acc0370c-3f30-3519-6265-61aba9d9c3bd
+41 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+Trying next ...
+Connected with properties {"type":"internet"} to mifpvd-1
+42 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+43 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+44 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+45 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+46 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+47 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+48 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+49 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+50 using mifpvd-1 {"type":"internet"} (pvds in system: mifpvd-1 mifpvd-2)
+^C

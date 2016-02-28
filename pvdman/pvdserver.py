@@ -86,6 +86,8 @@ class PvdApiServer ( dbus.service.Object ):
 		# filter pvds: remove ones that don't satisfy criteria
 		for pvd in pvds[:]:
 			pvd_props = pvd[3]
+			if not pvd_props:
+				continue
 			for prop in props:
 				val = pvd_props.get(prop)
 				# if not => use default values: TODO

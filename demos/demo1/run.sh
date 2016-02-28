@@ -18,8 +18,8 @@ if [ "$ROLE" != "C" -a "$ROLE" != "R1" -a "$ROLE" != "R2" \
      -a "$ROLE" != "S1" -a "$ROLE" != "S2" ]; then Usage; fi
 
 # directories
-DEMOHOME=${0%/*}
-REPOROOT=$DEMOHOME/../..
+DEMOHOME=$(cd $(dirname "$0"); pwd)
+REPOROOT=$(dirname $(dirname "$DEMOHOME"))
 TMPDIR=$DEMOHOME/__mif_cache__
 TESTAPPS=$REPOROOT/testapps
 TMPLDIR=$DEMOHOME/templates

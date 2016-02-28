@@ -4,7 +4,8 @@ ROLE=`hostname`
 COMMAND=$1
 
 # directories
-DEMOHOME=../${0%/*}
+DEMOHOME=$(dirname $(cd $(dirname "$0"); pwd))
+REPOROOT=$(dirname $(dirname "$DEMOHOME"))
 
 source $DEMOHOME/conf_$ROLE.sh
 
@@ -15,12 +16,13 @@ function start {
 }
 function stop {
   echo "Stopping $ROLE"
-  $DEMOHOME/run.sh stop $ROLE
   ip link set $DEV1 down
+  $DEMOHOME/run.sh stop $ROLE
 }
 
 function reset {
-  stop
+  echo "Exiting $ROLE"
+  $DEMOHOME/run.sh stop $ROLE
   ip link set $DEV1 up
   exit 1
 }

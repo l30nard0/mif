@@ -40,7 +40,7 @@ static int retry = 0;
 
 void pvd_signal_handler ( char *action, char *pvd_id )
 {
-	//printf ( "Received signal with values: %s %s\n", action, pvd_id );
+	printf ( "Received signal with values: %s %s\n", action, pvd_id );
 	retry = 1;
 }
 
@@ -145,7 +145,7 @@ int main ( int argc, char **argv )
 			continue;
 		}
 
-		//g_main_context_iteration (NULL, 0);
+		g_main_context_iteration (NULL, 0);
 		sleep(1);
 
 		size = recv ( sock, in_buf, MAXBUF, MSG_DONTWAIT );

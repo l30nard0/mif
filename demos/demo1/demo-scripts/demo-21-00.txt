@@ -1,0 +1,39 @@
+This demo is similar with demo-20. However, client always choose best PvD
+announced by the system (MIF-pvdman) regardless if its working or not.
+
+
+For this script prepare newtork setup as shown in demo-00-00-readme.txt.
+
+Scripts demo-21* use program "pvd_echo_client_signal" (from testapps).
+
+Program "pvd_echo_client_signal" tries to reach service on server S1
+("on Internet") using best possible connection:
+1. if PVD with "internet" + "free" is available use it first
+2. if "internet" + "free" isn't available, search for PVD with "internet"
+3. if PVD with "internet" isn't available retry and retry ...
+
+
+When multiple PVDs are available, program also (as info only) prints a list
+of all available PVDs. This is helpful because it shows when some PVD appeared
+or dissapeared from system (pvdman).
+
+Using this program several system properties are shown:
+- adaptable MIF aware application
+  * choose best PVD available
+  * recheck for better PVD after receiving a signal about change in PvDs
+- dynamical addition and deletion of PVDs
+  * pvdman periodically pings routers: when no response all its PVDs are removed
+- operations with network interfaces and namespaces (with python) slows down
+  system drastically (only when operations are performed)
+- implementation has bugs :(
+
+Results from one run are presented and commented in "demo-21-xx-out-0.txt".
+
+Script "demo-21-02-C-pvd-retry.sh" is used to start "pvd_echo_client_signal".
+$ sudo ./demo-21-02-C-pvd-retry.sh
+
+Script "demo-21-01-R-start-stop.sh" can be used to automate test on routers.
+$ sudo ./demo-21-01-R-start-stop.sh start -- will start services on router
+$ sudo ./demo-21-01-R-start-stop.sh stop  -- will stop services on router and
+  also disable interface which connect it to client (so that pvdman can detect
+  that router is offline)

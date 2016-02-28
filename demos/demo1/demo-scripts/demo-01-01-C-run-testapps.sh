@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # directories
-DEMOHOME=../${0%/*}
-REPOROOT=$DEMOHOME/../..
+DEMOHOME=$(dirname $(cd $(dirname "$0"); pwd))
+REPOROOT=$(dirname $(dirname "$DEMOHOME"))
 TMPDIR=$DEMOHOME/__mif_cache__
 TESTAPPS=$REPOROOT/testapps
 

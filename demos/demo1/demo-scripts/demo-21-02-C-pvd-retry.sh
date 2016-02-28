@@ -10,5 +10,5 @@ TESTAPPS=$REPOROOT/testapps
 ( cd $TESTAPPS && make > /dev/null 2>&1 )
 
 echo "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo Running: ./pvd_echo_client 2001:db8:10::2 20000
-$TESTAPPS/pvd_echo_client 2001:db8:10::2 20000
+echo Running: ./pvd_echo_client_signal 2001:db8:10::2 20000
+$TESTAPPS/./pvd_echo_client_signal 2001:db8:10::2 20000

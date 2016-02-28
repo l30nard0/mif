@@ -2,8 +2,8 @@
 
 # start on client after 30-02 !!!
 
-DEMOHOME=../${0%/*}
-REPOROOT=$DEMOHOME/../..
+DEMOHOME=$(dirname $(cd $(dirname "$0"); pwd))
+REPOROOT=$(dirname $(dirname "$DEMOHOME"))
 TESTAPPS=$REPOROOT/testapps
 
 #f037ea62-ee4f-44e4-825c-16f2f5cc9b3e (R2)
