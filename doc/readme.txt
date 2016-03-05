@@ -1,7 +1,7 @@
 PvD architecture overview / implementation details (work in progress)
 =====================================================================
 This document describes a proof-of-concept implementation of provisioning domain
-(PvD) aware client-side network management component (MIF-pvdman). The source
+(PvD) aware client-side network management component (PvD-manager). The source
 code is available at https://github.com/dskvorc/mif-pvdman.
 
 Contents
@@ -15,19 +15,19 @@ Contents
 
 1. Architecture Overview and Implementation Details
 ---------------------------------------------------
-MIF-pvdman is a client-side component for IPv6 network auto-configuration based
+PvD-manager is a client-side component for IPv6 network auto-configuration based
 on multiple provisioning domains (PvDs), as described in RFC 6418 and RFC 7556
 (https://tools.ietf.org/html/rfc6418, https://tools.ietf.org/html/rfc7556).
-MIF-pvdman is orthogonal to existing system, which means it does not interfere
+PvD-manager is orthogonal to existing system, which means it does not interfere
 with regular network behavior: none of the services and settings used by Network
 Manager and similar components are not changed nor affected.
 
 PvDs are implemented through Linux network namespaces. For each coherent PvD
-information set received on the network interface, MIF-pvdman creates a separate
+information set received on the network interface, PvD-manager creates a separate
 network namespace and configures received network parameters within that
 namespace. Since each network namespace uses separate IP stack which is isolated
 from other namespaces, potentially conflicting network parameters received from
-different network providers can safely coexist on a single host. MIF-pvdman
+different network providers can safely coexist on a single host. PvD-manager
 manages only those newly created namespaces associated with the PvDs and their
 network settings and leaves the default network namespace intact. That way, all
 the existing network management components, such as Network Manager, continue to
@@ -35,7 +35,7 @@ work unobtrusively.
 
  +-------------------------------------------------------+    +--------------+
  | +---------------------------------------------------+ |    |    +-------+ |
- | | MIF-pvdman                                        | |    | +--+ radvd | |
+ | | PvD-manager                                       | |    | +--+ radvd | |
  | | +-----------+     +-----------+     +-----------+ | |    | |  +-------+ |
  | | | pvdserver +-->--+   pvdman  +--<--+ ndpclient | | |    | |            |
  | | +-----+-----+     +-------+---+     +-----+-----+ | |    | |  +-------+ |
@@ -54,7 +54,7 @@ work unobtrusively.
 
                 Figure 1. MIF prototype architecture overview
 
-MIF-pvdman receives network configurations through Router Advertisement messages
+PvD-manager receives network configurations through Router Advertisement messages
 (RAs). Modified version of PvD aware radvd is used. Each RA may contain one or
 more network configurations which are classified either as explicit or implicit
 PvDs. Explicit PvD is a set of coherent NDP options explicitly labeled with a
@@ -65,7 +65,7 @@ explicit PvDs may appear in a single RA, each within a different PvD container
 option, as long as they are labeled with different PvD identifiers. Implicit PvD
 is just another name for top-level NDP options placed outside the PvD container
 option, as in regular PvD unaware router advertisements. Since implicit PvDs
-are not labeled with PvD identifier, MIF-pvdman automatically generates an
+are not labeled with PvD identifier, PvD-manager automatically generates an
 identifier for internal use and configures the implicit PvD on the host in the
 same way as if it was the explicit one. Only one implicit PvD is allowed per RA.
 In current prototype, UUID is used as a PvD identifier.
@@ -77,12 +77,12 @@ to the outside world, virtual interface is connected to the physical interface
 on which the related PvD information is received through the RA. Each virtual
 interface is assigned a link-local IPv6 address (fe80::/64) and one or more
 addresses derived from Prefix Information options if present in the received RA.
-Besides the IP addresses, MIF-pvdman configures the routing tables and DNS
+Besides the IP addresses, PvD-manager configures the routing tables and DNS
 records within the namespace. By default, a link-local and default route via the
 RA-announcing router are added to the routing table, regardless of the routing
 information received in RA. Additional routing information is configured if
 Route Information options are received in RA.
-Finally, for each RDNSS and DNSSL option received in RA, MIF-pvdman creates a
+Finally, for each RDNSS and DNSSL option received in RA, PvD-manager creates a
 record in /etc/netns/NETNS_NAME/resolv.conf, where NETNS_NAME is a name of the
 network namespace associated with the PvD.
 
@@ -95,7 +95,7 @@ to the network namespace associated with the selected PvD. Further network
 operations (socket creation, sending and receiving data) are performed within
 that namespace. Once obtained by the application, socket handles are linked to
 the network namespace they were originally obtained from and continue to work in
-that namespace, regardles of whether the application switches to another
+that namespace, regardless of whether the application switches to another
 namespace at some time later. This enables the application to use multiple PvDs
 simultaneously. The only requirement is that the application is running within a
 proper network namespace while obtaining a socket.
@@ -117,7 +117,7 @@ Other parameters (in this "draft" called "properties") are also provided by
 router, but only on request, using HTTP protocol on router's link-local address,
 using port 8080.
 
-Upon receiving PvD information from router, MIF-pvdman tries to get a file with
+Upon receiving PvD information from router, PvD-manager tries to get a file with
 PvD properties from the same router. If such file exists, network related PvD
 parameters are extended with ones (properties) from received file.
 
@@ -125,12 +125,12 @@ Client application receives all those additional properties on request, and may
 select appropriate PvD based on them.
 
 Current implementation is very rudimentary: files on router are in JSON format.
-MIF-pvdman interpret them - create a dcitionary of them, but only because
-MIF-pvdman its written in Python and using JSON is easy, while client
+PvD-manager interpret them - create a dictionary of them, but only because
+PvD-manager it's written in Python and using JSON is easy, while client
 applications are written in C. In real implementation this should be reversed -
 only client should interpret file with PvDs' properties.
 
-Properties used in this prototype are just an example (name, type, bandwith,
+Properties used in this prototype are just an example (name, type, bandwidth,
 price), not to be used in some protocol specification.
 The idea is to present mechanism to provide additional PvD properties obtained
 by some mechanism (not by RAs) and let client application decide what to do with
@@ -172,9 +172,9 @@ Examples for PvD properties:
 3. Overview of Development Environment
 --------------------------------------
 Prototype system implementation described above is implemented and tested on
-Linux/Fedora 23 and Linux/Lbuntu 15.10. Test environment consists of minimum two
+Linux/Fedora 23 and Linux/Lubuntu 15.10. Test environment consists of minimum two
 machines, one being a router running radvd, while another being a regular host
-running MIF-pvdman and client applications. Additional routers and "servers"
+running PvD-manager and client applications. Additional routers and "servers"
 behind routers are used in some demonstrations.
 In our experiments, we used virtual machines hosted in VMware Player.
 
@@ -185,10 +185,10 @@ Services on routers (Rx) and servers (Sx):
 - DNS server (bind)
 - test applications (echo_server, ...)
 
-Service on client - MIF-pvdman:
+Service on client - PvD-manager:
 - directory "pvdman"
 - requires python3 + netaddr + pyroute2 modules
-- MIF-pvdman modules:
+- PvD-manager modules:
   * main.py
     - start services, connects modules, respond on events
     - start with: sudo python2 main.py [-i <interface-name>]
@@ -206,12 +206,12 @@ Service on client - MIF-pvdman:
 4. Using MIF prototype
 ----------------------
 
-MIF API consists of several methods. Most methods first contact MIF-pvdman to
-obtain a list of PvDs and then performe some operations on them: select one PvD
-and switch to that PvD. Other methods (like pvd_reset) doesn't use MIF-pvdman.
-In this scenario, MIF-pvdman just serves information about PvDs to applications
+MIF API consists of several methods. Most methods first contact PvD-manager to
+obtain a list of PvDs and then perform some operations on them: select one PvD
+and switch to that PvD. Other methods (like pvd_reset) doesn't use PvD-manager.
+In this scenario, PvD-manager just serves information about PvDs to applications
 synchronously on request or via signals (to notify a client about some change).
-Therefore, two operations are required from MIF-pvdman, to provide PvD
+Therefore, two operations are required from PvD-manager, to provide PvD
 information when requested ("get" functions) and to send a signal (over d-bus)
 when something changed in PvDs.
 
@@ -240,7 +240,7 @@ Sample application are presented in directory "testapps".
 Properties of API:
 - API is written for C programming language
 - requires glib2-devel package (for d-bus communications)
-- uses d-bus to connect to MIF-pvdman
+- uses d-bus to connect to PvD-manager
 - methods provided by API:
   * pvd_get_by_id - get a list of PvDs which id matches (contains) given string
   * pvd_get_by_properties - get a list of PvDs which have requested properties
@@ -248,11 +248,11 @@ Properties of API:
     - retrieve PvD with given id (confirm that such PvD exist)
     - switch calling thread (process) into given PvD (namespace)
   * pvd_reset - switch application back to default namespace (not managed by
-    MIF-pvdman)
+    PvD-manager)
   * pvd_register_signal - register a function to be called when some change in
-    PvDs happens (signal is sent by MIF-pvdman)
+    PvDs happens (signal is sent by PvD-manager)
 
-API usage reccomentations/steps
+API usage recommendations/steps
 1. Use calls to pvd_get_by_id/pvd_get_by_properties to get desired PvD Id.
 2. Call pvd_activate to switch thread/process to desired PvD.
 3. Call operations that precede "socket", like getaddrinfo, gethostbyname, ...
@@ -264,7 +264,7 @@ Opening socket in another PvD (besides already opened ones) should follow the
 same procedure: steps 1 to 6.
 Operations like send and receive on sockets prepared for different PvDs should
 work simultaneously, as expected, as long as PvD is functional (in our
-implementaion as long as related network namespace is up and its interfaces are
+implementation as long as related network namespace is up and its interfaces are
 up and connected).
 
 Test applications prepared in "testapps" should be compiled with: make [appname]
@@ -293,7 +293,7 @@ output from test runs.
     is generated from constant parameters (not timeouts) so that same
     parameters always produce same PvD ID.
 - HTTP protocol and HTTP server on routers are used for delivering PvD properties
-- Python 3 with pyroute2 module is used for MIF-pvdman implementation
+- Python 3 with pyroute2 module is used for PvD-manager implementation
   * Python 3 is chosen for rapid prototyping
   * module pyroute2 is used for most network related operations
 - IPv6 address family only
@@ -303,7 +303,7 @@ output from test runs.
   * why:
     - d-bus is "popular" choice for communication with system services
     - NetworkManager uses d-bus (if this implementation is to be merged with it)
-  * MIF-pvdman offer services
+  * PvD-manager offer services
   * PvD aware application call services (using API from "api")
 - API
   * pvd_get_by_id
@@ -318,7 +318,7 @@ output from test runs.
 
 6.1. PvD information delivery
 
-6.1.1. PvD network related informations
+6.1.1. PvD network related information
 
 6.1.1.1. Router Advertisement messages
 
@@ -329,7 +329,7 @@ Other possibilities are discussed in separate document (draft).
 
 6.1.1.2. DHCP
 
-DHCP can be used to deliver PvD informations, but it isn't implemented since
+DHCP can be used to deliver PvD information, but it isn't implemented since
 IPR claim was set for particular draft. Since that IPR claim is very broad, any
 implementation that carry PvD information will violate it.
 For DHCP implementation to be possible that IPR claim must be refuted.
@@ -341,7 +341,7 @@ Since question "What are PvD properties?" is unresolved, only demo properties
 are shown in this prototype. The focus was on delivery mechanism and PvD
 selection based on some filters.
 To us, most obvious choice was to use some other mechanism, not one used to
-deliver PvD network informations. Same mechanisms are used by web browsers to
+deliver PvD network information. Same mechanisms are used by web browsers to
 detect proxy servers and similar settings.
 Embedding such properties within RAs (or in future DHCP) messages might be
 problematic since those messages might become too long.
@@ -366,12 +366,12 @@ Similar formats, as XML, will achieve same thing.
 Decission "why namespaces are used" is present in section 1 and design document
 Modifications on Fedora to support MIF. Some may argue that this is too specific
 choice applicable only on Linux. However, since Android is based on Linux, systems
-that could potentially implement presented MIF managment are very numerous.
+that could potentially implement presented MIF management are very numerous.
 
 Linux network namespace mechanism is used to separate network stack from link
-layer (L2) up. Its introduced as a container mechanism which allows process and
+layer (L2) up. It's introduced as a container mechanism which allows process and
 network isolation for special applications (e.g. instead of using "whole Linux
-operating system" in sparate virtual machine, a container is created using
+operating system" in separate virtual machine, a container is created using
 namespaces and an isolated application is run within).
 
 Required separation for PvD implementation require separation at Internet layer
@@ -400,7 +400,7 @@ be the best idea - other solutions should be used (maybe using a bridge).
 Problems encountered with Linux namespaces are:
 a) L2 (and up) emulation, while L3 would be better.
    As consequence, each PvD must have its own IP address. While this isn't big
-   problem with IPv6 addresses its not so with IPv4. We might argue that even
+   problem with IPv6 addresses it's not so with IPv4. We might argue that even
    with IPv4, when local addresses are used (10.0.0.0/8, 172.16.0.0/12 and
    192.168.0.0/16) there might be enough local addresses (with planning).
    However, when public IPv4 addresses are used this solution isn't appropriate!
@@ -453,11 +453,11 @@ Issue that should be also considered here is WHEN the MIF manager detect changes
 i)  New PvDs are announced by RA which are issued periodically or when something
     goes in UP state.
 
-ii) When PvD goes down its usually because link went down (e.g. no more in Wi-Fi
+ii) When PvD goes down it's usually because link went down (e.g. no more in Wi-Fi
     range). Of course such event can be also announced via RAs (e.g. by setting
     some timeout to zero in network related parameters - prefix), but it should
     be expected that this will occur rarely.
-    Therefore, its more realistic that an application will detect PvD is down
+    Therefore, it's more realistic that an application will detect PvD is down
     before MIF manager. Maybe we should design an API which an application will
     use to contact MIF manager and to signal it about a problem with specific
     PvD. MIF manager can then recheck such PvD and its connections (and remove
@@ -483,9 +483,9 @@ There are several events that should be considered by PvD aware architecture.
 
 6.4.1. New PvD is created
 
-When a new PvD is created by MIF-pvdman (e.g. as a result of new RAs), a signal
+When a new PvD is created by PvD-manager (e.g. as a result of new RAs), a signal
 is sent to all PvD aware applications that are registered for that signal.
-What will an application do on such signal its up to that application.
+What will an application do on such signal it's up to that application.
 
 PvD unaware application doesn't use PvD and will continue to run as before.
 
@@ -529,7 +529,7 @@ accordingly.
 PvD unaware applications don't use PvD and will continue to run as before.
 
 PvD unaware applications started with launcher in that PvD will run as before
-or temporarely fail (break and restart connection) or abort (exit). As in
+or temporarily fail (break and restart connection) or abort (exit). As in
 previous scenarios, MIF PvD manager could, based on some system policy, so
 something, like replace changed PvD with another one, if current doesn't satisfy
 some requirements.
@@ -543,7 +543,7 @@ Main reasons include:
 - each virtual interface created for PvD requires an IP address
 - development time
 
-Adding support for IPv4 into MIF-pvdman shouldn't require too much effort since
+Adding support for IPv4 into PvD-manager shouldn't require too much effort since
 same functions could be used as with IPv6, and most will automatically detect
 IP family (4 or 6).
 
@@ -555,7 +555,7 @@ solution for networks that use public IPv4 addresses.
 When private (local) addresses are used, a larger address pool should be
 allocated since each node (computer) might require several IP addresses.
 
-If IPv4 address pool isn't a problem, implementation of IPv4 into MIF-pvdman
+If IPv4 address pool isn't a problem, implementation of IPv4 into PvD-manager
 should be relatively simple.
 
 Creating dual stack PvDs won't be a problem since it just requires to add

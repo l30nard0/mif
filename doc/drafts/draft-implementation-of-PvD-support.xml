@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!-- This template is for creating an Internet Draft using xml2rfc,
+     which is available here: http://xml.resource.org. -->
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+<!-- One method to get references from the online citation libraries.
+     There has to be one entity for each item to be referenced.
+     An alternate method (rfc include) is described in the references. -->
+
+<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC2629 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2629.xml">
+<!ENTITY RFC3552 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.3552.xml">
+<!ENTITY I-D.narten-iana-considerations-rfc2434bis SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.narten-iana-considerations-rfc2434bis.xml">
+<!ENTITY I-D.ietf-mif-mpvd-dhcp-support SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-mif-mpvd-dhcp-support.xml">
+<!ENTITY I-D.ietf-mif-mpvd-ndp-support SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-mif-mpvd-ndp-support.xml">
+
+<!ENTITY RFC6418 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6418.xml">
+<!ENTITY RFC6419 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6419.xml">
+<!ENTITY RFC7556 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7556.xml">
+]>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<!-- used by XSLT processors -->
+<!-- For a complete list and description of processing instructions (PIs),
+     please see http://xml.resource.org/authoring/README.html. -->
+<!-- Below are generally applicable Processing Instructions (PIs) that most I-Ds might want to use.
+     (Here they are set differently than their defaults in xml2rfc v1.32) -->
+<?rfc strict="yes" ?>
+<!-- give errors regarding ID-nits and DTD validation -->
+<!-- control the table of contents (ToC) -->
+<?rfc toc="yes"?>
+<!-- generate a ToC -->
+<?rfc tocdepth="4"?>
+<!-- the number of levels of subsections in ToC. default: 3 -->
+<!-- control references -->
+<?rfc symrefs="yes"?>
+<!-- use symbolic references tags, i.e, [RFC2119] instead of [1] -->
+<?rfc sortrefs="yes" ?>
+<!-- sort the reference entries alphabetically -->
+<!-- control vertical white space
+     (using these PIs as follows is recommended by the RFC Editor) -->
+<?rfc compact="yes" ?>
+<!-- do not start each main section on a new page -->
+<?rfc subcompact="no" ?>
+<!-- keep one blank line between list items -->
+<!-- end of list of popular I-D processing instructions -->
+<rfc category="info" docName="draft-sgros-dhcp-and-ipr-claim-analysis-00" ipr="trust200902">
+  <!-- category values: std, bcp, info, exp, and historic
+     ipr values: full3667, noModification3667, noDerivatives3667
+     you can add the attributes updates="NNNN" and obsoletes="NNNN"
+     they will automatically be output with "(if approved)" -->
+
+  <front>
+    <title abbrev="An implementation of PvD support in Linux">
+		An implementation of PvD support in Linux</title>
+
+    <author fullname="Stjepan Gros"
+            initials="S." surname="Gros"
+            role="editor">
+      <organization>University of Zagreb</organization>
+      <address>
+        <postal>
+          <street>Unska 3</street>
+          <city>Zagreb</city>
+          <code>10000</code>
+          <country>HR</country>
+        </postal>
+        <phone></phone>
+        <email>stjepan.gros@fer.hr</email>
+      </address>
+    </author>
+
+    <author fullname="Leonardo Jelenkovic"
+            initials="L." surname="Jelenkovic"
+            >
+      <organization>University of Zagreb</organization>
+      <address>
+        <postal>
+          <street>Unska 3</street>
+          <city>Zagreb</city>
+          <code>10000</code>
+          <country>HR</country>
+        </postal>
+        <phone></phone>
+        <email>leonardo.jelenkovic@fer.hr</email>
+      </address>
+    </author>
+
+    <author fullname="Dejan Skvorc"
+            initials="D." surname="Skvorc"
+            >
+      <organization>University of Zagreb</organization>
+      <address>
+        <postal>
+          <street>Unska 3</street>
+          <city>Zagreb</city>
+          <code>10000</code>
+          <country>HR</country>
+        </postal>
+        <phone></phone>
+        <email>dejan.skvorc@fer.hr</email>
+      </address>
+    </author>
+
+    <date month="March" year="2016" day="5" />
+
+    <!-- Meta-data Declarations -->
+
+    <area>General</area>
+
+    <workgroup>Internet Engineering Task Force</workgroup>
+
+    <!-- WG name at the upperleft corner of the doc,
+         IETF is fine for individual submissions.
+     If this element is not present, the default is "Network Working Group",
+         which is used by the RFC Editor as a nod to the history of the IETF. -->
+
+    <keyword>mpvd</keyword>
+    <keyword>ra</keyword>
+    <keyword>ndp</keyword>
+    <keyword>mif</keyword>
+    <keyword>implementation</keyword>
+
+    <abstract>
+      <t>
+      The purpose of this draft is to document two implementations that tried
+      to implement PvD architecture document. One implementation was done from
+      scratch (PvD-manager) while another is a part of an existing component
+      (NetworkManager).
+      </t>
+    </abstract>
+  </front>
+
+  <middle>
+
+    <section title="Introduction">
+
+      <t>
+      TBD.
+      </t>
+
+      <section title="Requirements Language">
+        <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+        "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+        document are to be interpreted as described in <xref
+        target="RFC2119">RFC 2119</xref>.</t>
+      </section>
+    </section>
+
+<section title="PvD-manager Implementation">
+<t>
+	PvD-manager is a client-side component for IPv6 network auto-configuration based
+	on multiple provisioning domains (PvDs), as described in
+	<xref target="RFC6418">RFC 6418</xref> and <xref target="RFC7556">RFC 7556</xref>.
+	PvD-manager is orthogonal to existing system, which means it does not interfere
+	with regular network behavior: none of the services and settings used by Network
+	Manager and similar components are not changed nor affected.
+	Implementation and documentation for PvD-manager is available at its
+	<xref target="PvD-manager">git repository</xref>.
+
+</t>
+
+<section title="Architecture">
+<t>
+	PvDs are implemented through Linux network namespaces. For each coherent PvD
+	information set received on the network interface, PvD-manager creates a separate
+	network namespace and configures received network parameters within that
+	namespace. Since each network namespace uses separate IP stack which is isolated
+	from other namespaces, potentially conflicting network parameters received from
+	different network providers can safely coexist on a single host. PvD-manager
+	manages only those newly created namespaces associated with the PvDs and their
+	network settings and leaves the default network namespace intact. That way, all
+	the existing network management components, such as Network Manager, continue to
+	work unobtrusively.
+</t>
+<t>
+	<xref target="PvD-manager-architecture" /> presents an overview of a system
+	and its components which uses PvD-manager.
+</t>
+<figure anchor="PvD-manager-architecture" title="PvD prototype architecture overview">
+<artwork><![CDATA[
++---------------------------------------------------+  +-------------+
+| +-----------------------------------------------+ |  |   +-------+ |
+| | PvD-manager                                   | |  | +-+ radvd | |
+| | +-----------+   +-----------+   +-----------+ | |  | | +-------+ |
+| | | pvdserver +->-+   pvdman  +-<-+ ndpclient | | |  | |           |
+| | +-----+-----+   +-------+---+   +-----+-----+ | |  | | +-------+ |
+| +-------|-----------------|-------------|-------+ |  | +-+ httpd | |
+|         |d-bus      create|configure    |RA/RS    |  | | +-------+ |
+| get_pvds|           delete|             |HTTP     |  | |           |
+| +-------|-------+    +----+---------+   |         |  | |           |
+| | +-----+-----+ |join|   network    |  -+---------+--+-+--        -+-
+| | |  MIF API  +------+  namespace   |             |  |             |
+| | +-----------+ |    |  operations  |             |  |             |
+| |               |    +--------------+             |  |             |
+| |   PvD aware   |                                 |  |             |
+| |  application  |                                 |  |             |
+| +---------------+                    Client (PC)  |  |     Router  |
++---------------------------------------------------+  +-------------+
+]]></artwork>
+</figure>
+<t>
+	PvD-manager receives network configurations through Router Advertisement (RA)
+	messages. Modified version of PvD aware
+	<xref target="radvd">radvd daemon</xref> is used. Each RA may contain one or
+	more network configurations which are classified either as explicit or implicit
+	PvDs. Explicit PvD is a set of coherent NDP options explicitly labeled with a
+	unique PvD identifier and nested within a special NDP option called PVD
+	container, as described in <xref target="I-D.ietf-mif-mpvd-ndp-support">
+	draft-ietf-mif-mpvd-ndp-support-02</xref>. Multiple
+	explicit PvDs may appear in a single RA, each within a different PvD container
+	option, as long as they are labeled with different PvD identifiers. Implicit PvD
+	is just another name for top-level NDP options placed outside the PvD container
+	option, as in regular PvD unaware router advertisements. Since implicit PvDs
+	are not labeled with PvD identifier, PvD-manager automatically generates an
+	identifier for internal use and configures the implicit PvD on the host in the
+	same way as if it was the explicit one. Only one implicit PvD is allowed per RA.
+	In current prototype, UUID is used as a PvD identifier.
+</t>
+<t>
+	Each PvD, either explicit or implicit, is associated with a network namespace
+	with a single virtual network interface (besides the loopback) of macvlan type,
+	where PvD-related network parameters are configured. To establish a connectivity
+	to the outside world, virtual interface is connected to the physical interface
+	on which the related PvD information is received through the RA. Each virtual
+	interface is assigned a link-local IPv6 address (fe80::/64) and one or more
+	addresses derived from Prefix Information options if present in the received RA.
+	Besides the IP addresses, PvD-manager configures the routing tables and DNS
+	records within the namespace. By default, a link-local and default route via the
+	RA-announcing router are added to the routing table, regardless of the routing
+	information received in RA. Additional routing information is configured if
+	Route Information options are received in RA.
+	Finally, for each RDNSS and DNSSL option received in RA, PvD-manager creates a
+	record in /etc/netns/NETNS_NAME/resolv.conf, where NETNS_NAME is a name of the
+	network namespace associated with the PvD.
+</t>
+<t>
+	PvD aware client application uses PvD API to get a list of available PvDs
+	configured on the local host, and activate chosen PvD to use it for
+	communication. Information about configured PvDs are exposed to applications by
+	a special PvD service running on local host. D-Bus is used to connect
+	applications to PvD service. Upon PvD activation, client application is switched
+	to the network namespace associated with the selected PvD. Further network
+	operations (socket creation, sending and receiving data) are performed within
+	that namespace. Once obtained by the application, socket handles are linked to
+	the network namespace they were originally obtained from and continue to work in
+	that namespace, regardless of whether the application switches to another
+	namespace at some time later. This enables the application to use multiple PvDs
+	simultaneously. The only requirement is that the application is running within a
+	proper network namespace while obtaining a socket.
+</t>
+<t>
+	PvD unaware clients operate as before. Although they are not able to use PvD
+	API to select a certain PvD, they can still be forced to use a specific PvD by
+	starting them in a network namespace associated with that PvD. To run a program
+	within a given namespace, it should be started with:
+	<list style="empty">
+		<t>ip netns exec &lt;pvd-namespace-name&gt; &lt;command with args&gt;</t>
+	</list>
+	or they can be started with provided launchers ("pvd_run" and "pvd_prop_run").
+</t>
+<t>
+	As per <xref target="RFC7556">RFC 7556</xref>, implemented PvD system
+	provides basic, intermediate and advanced PvD support (in APIs) for
+	client applications. Only difference is that our basic support doesn't
+	provide automatic selection for PvD unaware application - it must be started
+	with PvD launcher with manual selection of PvD. Intermediate and advanced
+	PvD support require some additional properties (metadata) provided with PvD.
+	Next section describe used mechanism to provide such information to PvD-manager
+	which then provide such information to client applications.
+</t>
+
+</section>
+
+<section title="PvD Properties">
+<t>
+	With RA messages routers provides network related parameters for PvDs.
+	Other parameters that can be used to detail properties of particular PvD
+	(an application can use them to better select PvD) in this draft are called "PvD
+	properties" or just "properties".
+</t><t>
+	In this prototype implementation, PvD properties are also provided by
+	router, but only on request, using HTTP protocol on router's link-local address,
+	using port 8080. Router's link-local address is saved by PvD-manager when RA was
+	received.
+</t><t>
+	Upon receiving PvD information from router, PvD-manager tries to get a file with
+	PvD properties from the same router. If such file exists, network related PvD
+	parameters are extended with ones (properties) from received file.
+</t><t>
+	Client application receives all those additional properties from PvD-manager,
+	and may select appropriate PvD based on them.
+</t><t>
+	Current implementation is very rudimentary: files on router are in JSON format.
+	PvD-manager interpret them - create a dictionary of them, but only because
+	PvD-manager it's written in Python and using JSON is easy, while client
+	applications are written in C. In real implementation this should be reversed -
+	only client should interpret file with PvDs' properties.
+</t><t>
+	Properties used in this prototype are just an example ("name", "type", "bandwidth",
+	"price"), not to be used in some protocol specification.
+	We presented one mechanism to provide additional PvD properties obtained
+	by some mechanism (not by RAs) and let client application decide what to do with
+	them.
+</t>
+
+<t>
+	<xref target="PvD-property-examples" /> presents example properties for several
+	PvDs when obtained from the same source (same router).
+</t>
+<figure anchor="PvD-property-examples" title="PvD property examples">
+    <artwork><![CDATA[
+[
+    {
+        "name": "Home internet access",
+        "type": ["internet", "wired"],
+        "id": "implicit",
+        "bandwidth": "10 Mbps",
+        "pricing": "free"
+    },
+    {
+        "name": "voip",
+        "type": ["iptv", "wired"],
+        "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
+        "bandwidth": "10 Mbps",
+        "pricing": "free"
+    },
+    {
+        "name": "Cellular internet access",
+        "type": ["internet", "cellular"],
+        "id": "implicit",
+        "bandwidth": "1 Mbps",
+        "pricing": "0,01 $/MB"
+    },
+    {
+        "name": "Internet access over Lucy's phone",
+        "type": ["general", "cellular"],
+        "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
+        "bandwidth": "0,1 Mbps",
+        "pricing": "0,01 $/MB"
+    }
+]
+]]></artwork>
+</figure>
+</section>
+
+<section title="Deployment">
+<section title="Routers, DNS Servers">
+<t>
+	PvD architecture assumes presence of at least one router which runs
+	modified version of <xref target="radvd">radvd daemon</xref>.
+	Through RA messages, router conveys network related parameters to client
+	host (prefix, routes, DNS servers and domains).
+	Router should also provide PvD properties, using an HTTP server on port 8080
+	attached to router's link-local IP address.
+</t>
+<t>
+	DNS servers aren't part of PvD architecture but could be used to demonstrate
+	that different PvDs can use different DNS servers.
+</t>
+</section>
+<section title="PvD-manager, Client Applications">
+<t>
+	PvD-manager is a daemon for client host. Currently PvD-manager consists of
+	several modules. Main module maintain PvD information, creates, updates and
+	deletes namespaces. NDP module listens for RA messages, parse them and forward
+	them to main module. API server module listens for client application
+	requests (using d-bus) and responds to them, but also send signals to clients
+	when a change occurred in PvDs.
+</t>
+<t>
+	Before starting a network connection, PvD aware client application should first
+	request PvDs from PvD-manager. Next, one PvD should be selected (activated)
+	and only then network connection(s) created.
+	If other PvDs are required (later or in parallel), same procedure must be
+	followed: select PvD first and then create connections.
+	Connection will continue to operate within PvD in which was created,
+	regardless of PvDs selected later.
+</t>
+<t>
+	PvD unaware application should be started with PvD launcher to use certain
+	PvD. Otherwise, such application will behave as PvDs weren't present
+	("as usual").
+</t>
+</section>
+</section>
+
+<section title="Implementation Details">
+
+<t>
+	Proposed PvD architecture is based on Linux namespaces as PvD isolation
+	mechanism. Isolation namespaces provide resolve many issues about
+	overlapping and conflicting network parameters for different PvDs.
+	However, they also impose some requirements that may limit usage in certain
+	environment, especially ones based on public IPv4 addresses.
+	One of the main problem with namespaces is that each namespace requires
+	an IP address (since namespace emulates network from link-layer and up).
+</t>
+<t>
+	Only IPv6 is used in implementation. Main reasons include using RA messages
+	as PvD information provider and unrestricted generation of IPv6 address per
+	PvD.
+</t>
+
+<t>
+	A library is created with interfaces (API) for PvD operations, currently only for
+	programs in C programming language.
+	For communication between client application (using provided API) and
+	PvD-manager d-bus service is used.
+	Implemented interface include PvD retrieval methods
+	(pvd_get_by_id, pvd_get_by_properties), PvD selection (pvd_activate) and
+	registration for events when PvDs change (pvd_register_signal).
+	Sample test applications are created, which
+	demonstrate API usage and PvD system possibilities.
+</t>
+
+<t>
+	PvD-manager is implemented in Python 3 for rapid prototyping and availability
+	of network managing modules (mainly pyroute2 and netaddr).
+</t>
+
+
+<t>
+	More details about implementation of PvD-manager is available in its
+	<xref target="PvD-manager">documentation</xref>.
+</t>
+</section>
+
+<section title="Test Scenarios">
+
+<t>
+	Test scenarios used for validating implementations include a system with
+	one client host, two routers and two hosts that act as servers, as presented
+	on <xref target="demo-system" />.
+	All hosts are running as virtual machines.
+</t>
+<figure anchor="demo-system" title="Network configuration used in test scenarios">
+<artwork><![CDATA[
+              fd01::1/64+----+                                   +----+
+        2001:db8:1::1/64|    |2001:db8:10::1/32 2001:db8:10::2/32|    |
+           +----------o-+ R1 +-o-------------------------------o-+ S1 |
++------+   |            |    |        :     [VMnet3]             |    |
+|      |   |            +----+        :                          +----+
+|Client+-o-+ [VMnet2]                 : (for some tests this is linked)
+|      |   |            +----+        :                          +----+
++------+   |            |    |        :     [VMnet4]             |    |
+           +----------o-+ R2 +-o-------------------------------o-+ S2 |
+        2001:db8:2::1/64|    |2001:db8:20::1/32 2001:db8:20::2/32|    |
+              fd02::1/64+----+                                   +----+
+]]></artwork>
+</figure>
+
+<t>
+	All server hosts, including routers have configured HTTP and DNS servers
+	providing many possibilities for testing. Routers, in RAs advertise prefixes
+	as shown on <xref target="demo-system" />. Local addresses are used in
+	explicit PvDs (simulating some specific service), while public in implicit.
+</t>
+<t>
+	Example network configurations from <xref target="RFC7556">RFC 7556</xref>
+	are simulated with <xref target="demo-system" /> with various applications
+	on Client and servers S1 and S2.
+	S1 is accessible by client only through implicit PvD provided
+	by R1, while S2 similarly, only over PvD provided by R2.
+</t>
+<t>
+	If S1 simulate one service, and S2 another, client application can select
+	PvD based on service required and connect to S1 or S2. Or a PvD aware
+	application can use both in parallel.
+</t>
+<t>
+	VPN was simulated by a tunnel between Client and S2, created within
+	implicit PvD provided by R2. Then tunnel was added as another PvD.
+	S2 for this scenario had local address (and prefix)as local addresses
+	on R2 network: there were two PvDs with same prefix on Client.
+	However, client applications running in those two different PvDs for the
+	same local IP address (fd02::1) connected with different servers: one with
+	R2, and another (which used "VPN" PvD) with S2.
+</t>
+<t>
+	In some scenarios both S1 and S2 were connected to both routers R1 and R2.
+	In this scenarios better PvD could be chosen for connecting with servers,
+	if properties for PvDs are provided. Also, when some connection fails - when
+	some PvD loses connectivity, application can reset connections, refresh
+	PvD availability from PvD-manager and chose again among active PvDs.
+</t>
+<t>
+	More details for described scenarios and some other
+	are provided in <xref target="PvD-manager">demonstration test cases
+	</xref>.
+</t>
+
+
+
+</section>
+
+      <section title="Experiences gained">
+
+        <t>
+        Present some experience gained from the implementation. What
+        do you think was good? What would you do differently if you
+        were to implement this again. What about language/environment,
+        was it good, what was bad?
+        </t>
+
+      </section>
+
+    </section>
+
+    <section title="NetworkManager implementation">
+
+      <t>
+      TBD.
+      </t>
+
+    </section>
+
+    <section title="Server component">
+
+      <t>
+      Write about changes in the radvd component.
+      </t>
+
+    </section>
+
+    <section anchor="Acknowledgements" title="Acknowledgements">
+      <t>
+      TBW.
+      </t>
+    </section>
+
+    <!-- Possibly a 'Contributors' section ... -->
+
+    <section anchor="IANA" title="IANA Considerations">
+      <t>This memo includes no request to IANA.</t>
+
+      <t>All drafts are required to have an IANA considerations section (see
+      <xref target="I-D.narten-iana-considerations-rfc2434bis">the update of
+      RFC 2434</xref> for a guide). If the draft does not require IANA to do
+      anything, the section contains an explicit statement that this is the
+      case (as above). If there are no requirements for IANA, the section will
+      be removed during conversion into an RFC by the RFC Editor.</t>
+    </section>
+
+    <section anchor="Security" title="Security Considerations">
+      <t>All drafts are required to have a security considerations section.
+      See <xref target="RFC3552">RFC 3552</xref> for a guide.</t>
+    </section>
+  </middle>
+
+  <!--  *****BACK MATTER ***** -->
+
+  <back>
+    <!-- References split into informative and normative -->
+
+    <!-- There are 2 ways to insert reference entries from the citation libraries:
+     1. define an ENTITY at the top, and use "ampersand character"RFC2629; here (as shown)
+     2. simply use a PI "less than character"?rfc include="reference.RFC.2119.xml"?> here
+        (for I-Ds: include="reference.I-D.narten-iana-considerations-rfc2434bis.xml")
+
+     Both are cited textually in the same manner: by using xref elements.
+     If you use the PI option, xml2rfc will, by default, try to find included files in the same
+     directory as the including file. You can also define the XML_LIBRARY environment variable
+     with a value containing a set of directories to search.  These can be either in the local
+     filing system or remote ones accessed by http (http://domain/dir/... ).-->
+
+    <references title="Normative References">
+      <!--?rfc include="http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml"?-->
+
+      &RFC2119;
+
+      &RFC6418;
+
+      &RFC6419;
+
+      &RFC7556;
+
+    </references>
+
+    <references title="Informative References">
+      <!-- Here we use entities that we defined at the beginning. -->
+
+      &RFC2629;
+
+      &RFC3552;
+
+      &I-D.narten-iana-considerations-rfc2434bis;
+
+      &I-D.ietf-mif-mpvd-dhcp-support;
+
+      &I-D.ietf-mif-mpvd-ndp-support;
+
+      <!-- A reference written by an organization not a person. -->
+
+    </references>
+    <references title="Implementation repositories">
+		<reference anchor="PvD-manager" target="https://github.com/l30nard0/mif">
+		<front>
+			<title>PvD-manager repository</title>
+			<author fullname="Leonardo Jelenkovic"
+					initials="L." surname="Jelenkovic"
+					>
+			<organization>University of Zagreb</organization>
+			</author>
+
+			<author fullname="Dejan Skvorc"
+					initials="D." surname="Skvorc"
+					>
+			<organization>University of Zagreb</organization>
+			</author>
+
+			<date month="March" year="2016" />
+		</front>
+		</reference>
+		<reference anchor="radvd" target="https://github.com/dskvorc/mif-radvd">
+		<front>
+			<title>PvD customized radvd daemon</title>
+			<author fullname="Dejan Skvorc"
+					initials="D." surname="Skvorc"
+					>
+			<organization>University of Zagreb</organization>
+			</author>
+
+			<date month="February" year="2016" />
+		</front>
+		</reference>
+    </references>
+
+  </back>
+</rfc>

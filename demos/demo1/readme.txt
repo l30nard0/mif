@@ -273,7 +273,7 @@ Scripts:
 When offered multiple connections, a client can choose one depending on
 connections' properties.
 Most of previous examples can be classified as special cases of this one.
-However, here its up to application to choose PvD that suits her best by
+However, here it's up to application to choose PvD that suits her best by
 comparing available PvD properties.
 
                           +------------------------------+
