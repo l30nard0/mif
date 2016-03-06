@@ -137,35 +137,39 @@ by some mechanism (not by RAs) and let client application decide what to do with
 them.
 
 Examples for PvD properties:
+From R1:
 [
-	{
-		"name": "Home internet access",
-		"type": ["internet", "wired"],
-		"id": "implicit",
-		"bandwidth": "10 Mbps",
-		"pricing": "free"
-	},
-	{
-		"name": "voip",
-		"type": ["iptv", "wired"],
-		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
-		"bandwidth": "10 Mbps",
-		"pricing": "free"
-	},
-	{
-		"name": "Cellular internet access",
-		"type": ["internet", "cellular"],
-		"id": "implicit",
-		"bandwidth": "1 Mbps",
-		"pricing": "0,01 $/MB"
-	},
-	{
-		"name": "Internet access over Lucy's phone",
-		"type": ["general", "cellular"],
-		"id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
-		"bandwidth": "0,1 Mbps",
-		"pricing": "0,01 $/MB"
-	}
+    {
+        "name": "Home internet access",
+        "type": ["internet", "wired"],
+        "id": "implicit",
+        "bandwidth": "10 Mbps",
+        "pricing": "free"
+    },
+    {
+        "name": "TV",
+        "type": ["iptv", "wired"],
+        "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
+        "bandwidth": "10 Mbps",
+        "pricing": "free"
+    }
+]
+From R2:
+[
+    {
+        "name": "Cellular internet access",
+        "type": ["internet", "cellular"],
+        "id": "implicit",
+        "bandwidth": "1 Mbps",
+        "pricing": "0,01 $/MB"
+    },
+    {
+        "name": "Phone",
+        "type": ["voice", "cellular"],
+        "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
+        "bandwidth": "0,1 Mbps",
+        "pricing": "0,01 $/MB"
+    }
 ]
 
 

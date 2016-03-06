@@ -66,21 +66,21 @@ Table of Contents
      2.1.  Architecture  . . . . . . . . . . . . . . . . . . . . . .   3
      2.2.  PvD Properties  . . . . . . . . . . . . . . . . . . . . .   5
      2.3.  Deployment  . . . . . . . . . . . . . . . . . . . . . . .   6
-       2.3.1.  Routers, DNS Servers  . . . . . . . . . . . . . . . .   6
-       2.3.2.  PvD-manager, Client Applications  . . . . . . . . . .   7
      2.4.  Implementation Details  . . . . . . . . . . . . . . . . .   7
      2.5.  Test Scenarios  . . . . . . . . . . . . . . . . . . . . .   8
      2.6.  Experiences gained  . . . . . . . . . . . . . . . . . . .   9
-   3.  NetworkManager implementation . . . . . . . . . . . . . . . .   9
-   4.  Server component  . . . . . . . . . . . . . . . . . . . . . .   9
-   5.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   9
-   6.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
-   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
-     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  10
-     8.2.  Informative References  . . . . . . . . . . . . . . . . .  10
-     8.3.  Implementation repositories . . . . . . . . . . . . . . .  11
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
+       2.6.1.  Linux namespaces  . . . . . . . . . . . . . . . . . .   9
+   3.  NetworkManager implementation . . . . . . . . . . . . . . . .  10
+   4.  Server component  . . . . . . . . . . . . . . . . . . . . . .  10
+   5.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  10
+   6.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
+   8.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
+     8.1.  Normative References  . . . . . . . . . . . . . . . . . .  11
+     8.2.  Informative References  . . . . . . . . . . . . . . . . .  11
+     8.3.  Implementation repositories . . . . . . . . . . . . . . .  12
+     8.4.  URIs  . . . . . . . . . . . . . . . . . . . . . . . . . .  12
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  12
 
 1.  Introduction
 
@@ -283,8 +283,10 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
 
 
    Figure 2 presents example properties for several PvDs when obtained
-   from the same source (same router).
+   from two routers (R1 and R2 from test scenarios described in
+   Section 2.5.
 
+   From R1:
    [
        {
            "name": "Home internet access",
@@ -294,12 +296,15 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
            "pricing": "free"
        },
        {
-           "name": "voip",
+           "name": "TV",
            "type": ["iptv", "wired"],
            "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
            "bandwidth": "10 Mbps",
            "pricing": "free"
-       },
+       }
+   ]
+   From R2:
+   [
        {
            "name": "Cellular internet access",
            "type": ["internet", "cellular"],
@@ -308,8 +313,8 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
            "pricing": "0,01 $/MB"
        },
        {
-           "name": "Internet access over Lucy's phone",
-           "type": ["general", "cellular"],
+           "name": "Phone",
+           "type": ["voice", "cellular"],
            "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
            "bandwidth": "0,1 Mbps",
            "pricing": "0,01 $/MB"
@@ -320,15 +325,10 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
 
 2.3.  Deployment
 
-2.3.1.  Routers, DNS Servers
-
    PvD architecture assumes presence of at least one router which runs
-   modified version of radvd daemon [radvd].  Through RA messages,
-   router conveys network related parameters to client host (prefix,
-   routes, DNS servers and domains).  Router should also provide PvD
-   properties, using an HTTP server on port 8080 attached to router's
-   link-local IP address.
-
+   modified version of radvd daemon [radvd], described in Section 4.
+   Through RA messages, router conveys network related parameters to
+   client host (prefix, routes, DNS servers and domains).  Router should
 
 
 
@@ -338,17 +338,18 @@ Gros, et al.            Expires September 6, 2016               [Page 6]
 Internet-Draft  An implementation of PvD support in Linux     March 2016
 
 
+   also provide PvD properties, using an HTTP server on port 8080
+   attached to router's link-local IP address.
+
    DNS servers aren't part of PvD architecture but could be used to
    demonstrate that different PvDs can use different DNS servers.
-
-2.3.2.  PvD-manager, Client Applications
 
    PvD-manager is a daemon for client host.  Currently PvD-manager
    consists of several modules.  Main module maintain PvD information,
    creates, updates and deletes namespaces.  NDP module listens for RA
    messages, parse them and forward them to main module.  API server
    module listens for client application requests (using d-bus) and
-   responds to them, but also send signals to clients when a change
+   responds to them, and also send signals to clients when a change
    occurred in PvDs.
 
    Before starting a network connection, PvD aware client application
@@ -384,8 +385,7 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
    PvD-manager d-bus service is used.  Implemented interface include PvD
    retrieval methods (pvd_get_by_id, pvd_get_by_properties), PvD
    selection (pvd_activate) and registration for events when PvDs change
-   (pvd_register_signal).  Sample test applications are created, which
-   demonstrate API usage and PvD system possibilities.
+
 
 
 
@@ -394,8 +394,11 @@ Gros, et al.            Expires September 6, 2016               [Page 7]
 Internet-Draft  An implementation of PvD support in Linux     March 2016
 
 
-   PvD-manager is implemented in Python 3 for rapid prototyping and
-   availability of network managing modules (mainly pyroute2 and
+   (pvd_register_signal).  Sample test applications which demonstrate
+   API usage and PvD system possibilities are provided in repository.
+
+   PvD-manager is implemented in Python 3 because it allows rapid
+   prototyping using network managing modules (mainly pyroute2 and
    netaddr).
 
    More details about implementation of PvD-manager is available in its
@@ -438,10 +441,7 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
 
    VPN was simulated by a tunnel between Client and S2, created within
    implicit PvD provided by R2.  Then tunnel was added as another PvD.
-   S2 for this scenario had local address (and prefix)as local addresses
-   on R2 network: there were two PvDs with same prefix on Client.
-   However, client applications running in those two different PvDs for
-
+   S2 for this scenario had local address (and prefix) as local
 
 
 
@@ -450,8 +450,10 @@ Gros, et al.            Expires September 6, 2016               [Page 8]
 Internet-Draft  An implementation of PvD support in Linux     March 2016
 
 
-   the same local IP address (fd02::1) connected with different servers:
-   one with R2, and another (which used "VPN" PvD) with S2.
+   addresses on R2 network: there were two PvDs with same prefix on
+   Client.  However, client applications running in those two different
+   PvDs for the same IP address (fd02::1) connected with different
+   servers: one with R2, and another (which used "VPN" PvD) with S2.
 
    In some scenarios both S1 and S2 were connected to both routers R1
    and R2.  In this scenarios better PvD could be chosen for connecting
@@ -460,7 +462,7 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
    reset connections, refresh PvD availability from PvD-manager and
    chose again among active PvDs.
 
-   More details for described scenarios and some other are provided in
+   More details for described scenarios (and some other) are provided in
    demonstration test cases [PvD-manager].
 
 2.6.  Experiences gained
@@ -469,6 +471,66 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
    think was good?  What would you do differently if you were to
    implement this again.  What about language/environment, was it good,
    what was bad?
+
+2.6.1.  Linux namespaces
+
+   Using Linux namespaces still seems best option for PvD realization
+   despite its drawbacks.  Its isolation and ease of use from PvD-
+   manager and client application perspective can hardly be outmatched
+   with other solutions.  Besides already mentioned need for separate IP
+   address per namespace, there are several more issues with namespaces.
+
+   Managing namespaces (creation, deletion, modification) requires root
+   privileges (as expected).  However, even switching an application
+   from one namespace to another is possible only if application has
+   root privileges.  This currently limits this namespace approach to
+   only applications run by root.  For lifting this limitation, changes
+   in Linux kernel and namespace handling is required.  Some sort of
+   permission system should also be applied to namespaces (e.g.
+   similarly with permissions on files and system objects).
+
+   Switching namespace from within the application with setns doesn't
+   update DNS related configuration as expected.  When an application is
+   started with commands "ip netns exec <namespace-name> <application>
+   [arguments]", DNS configuration is updated (/etc/resolf.conf is the
+   one from /etc/netns/<namespace-name>/).  However, setns doesn't
+   replicate that behavior, and that manipulations should be done
+   separately (mounting certain directories/files).
+
+
+
+
+
+Gros, et al.            Expires September 6, 2016               [Page 9]
+
+Internet-Draft  An implementation of PvD support in Linux     March 2016
+
+
+   When a namespace is created, a virtual device is created that is
+   linked with physical device (and it gets assigned its own MAC
+   address).  However, if on particular physical device can't be linked
+   virtual one (like VPN), then either physical device must be moved to
+   certain PvD or some sort of bridge created and devices attached to
+   that bridge that can be moved to namespace.  Sometimes, it's better
+   to move physical device to particular namespace (PvD) and allow only
+   some applications its usage (e.g. like VPN).
+
+   Managing namespace: creating, deleting, adding device to it, adding
+   ip address and routes are operations performed within PvD-manager and
+   they aren't instant.  Maybe that is expected and "normal" since such
+   operations aren't to be performed frequently (only when something in
+   network changes).  However, when testing frequent changes in PvDs
+   (routers were connected and disconnected) significant delay in PvD
+   aware application was detected.  Sometimes PvD-manager's API server
+   module (that is responsible for client communication) become
+   unresponsive for at least several seconds.  This could be a bug in
+   PvD-manager or result of changes PvD-manager sent being applied by
+   Linux kernel.
+
+   Recently added feature of Linux kernel, named Virtual Routing and
+   Forwarding (VRF) [1] (core IPv4 support is in v4.3 and core IPv6
+   support is in v4.4.), seems possible alternative to namespaces.
+   However, it should be investigate further to create some conclusions.
 
 3.  NetworkManager implementation
 
@@ -493,18 +555,17 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
    above).  If there are no requirements for IANA, the section will be
    removed during conversion into an RFC by the RFC Editor.
 
+
+
+Gros, et al.            Expires September 6, 2016              [Page 10]
+
+Internet-Draft  An implementation of PvD support in Linux     March 2016
+
+
 7.  Security Considerations
 
    All drafts are required to have a security considerations section.
    See RFC 3552 [RFC3552] for a guide.
-
-
-
-
-Gros, et al.            Expires September 6, 2016               [Page 9]
-
-Internet-Draft  An implementation of PvD support in Linux     March 2016
-
 
 8.  References
 
@@ -547,20 +608,19 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
               considerations-rfc2434bis-09 (work in progress), March
               2008.
 
-   [RFC2629]  Rose, M., "Writing I-Ds and RFCs using XML", RFC 2629,
-              DOI 10.17487/RFC2629, June 1999,
-              <http://www.rfc-editor.org/info/rfc2629>.
 
 
 
 
 
-
-
-Gros, et al.            Expires September 6, 2016              [Page 10]
+Gros, et al.            Expires September 6, 2016              [Page 11]
 
 Internet-Draft  An implementation of PvD support in Linux     March 2016
 
+
+   [RFC2629]  Rose, M., "Writing I-Ds and RFCs using XML", RFC 2629,
+              DOI 10.17487/RFC2629, June 1999,
+              <http://www.rfc-editor.org/info/rfc2629>.
 
    [RFC3552]  Rescorla, E. and B. Korver, "Guidelines for Writing RFC
               Text on Security Considerations", BCP 72, RFC 3552,
@@ -575,6 +635,10 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
 
    [radvd]    Skvorc, D., "PvD customized radvd daemon", February 2016,
               <https://github.com/dskvorc/mif-radvd>.
+
+8.4.  URIs
+
+   [1] https://www.kernel.org/doc/Documentation/networking/vrf.txt
 
 Authors' Addresses
 
@@ -596,6 +660,20 @@ Authors' Addresses
    Email: leonardo.jelenkovic@fer.hr
 
 
+
+
+
+
+
+
+
+
+
+Gros, et al.            Expires September 6, 2016              [Page 12]
+
+Internet-Draft  An implementation of PvD support in Linux     March 2016
+
+
    Dejan Skvorc
    University of Zagreb
    Unska 3
@@ -613,4 +691,38 @@ Authors' Addresses
 
 
 
-Gros, et al.            Expires September 6, 2016              [Page 11]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gros, et al.            Expires September 6, 2016              [Page 13]

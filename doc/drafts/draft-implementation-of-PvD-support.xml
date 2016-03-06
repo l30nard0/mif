@@ -304,10 +304,12 @@
 
 <t>
 	<xref target="PvD-property-examples" /> presents example properties for several
-	PvDs when obtained from the same source (same router).
+	PvDs when obtained from two routers (R1 and R2 from test scenarios described in
+	<xref target="test-scenarios" />.
 </t>
 <figure anchor="PvD-property-examples" title="PvD property examples">
     <artwork><![CDATA[
+From R1:
 [
     {
         "name": "Home internet access",
@@ -317,12 +319,15 @@
         "pricing": "free"
     },
     {
-        "name": "voip",
+        "name": "TV",
         "type": ["iptv", "wired"],
         "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3e",
         "bandwidth": "10 Mbps",
         "pricing": "free"
-    },
+    }
+]
+From R2:
+[
     {
         "name": "Cellular internet access",
         "type": ["internet", "cellular"],
@@ -331,8 +336,8 @@
         "pricing": "0,01 $/MB"
     },
     {
-        "name": "Internet access over Lucy's phone",
-        "type": ["general", "cellular"],
+        "name": "Phone",
+        "type": ["voice", "cellular"],
         "id": "f037ea62-ee4f-44e4-825c-16f2f5cc9b3f",
         "bandwidth": "0,1 Mbps",
         "pricing": "0,01 $/MB"
@@ -343,10 +348,11 @@
 </section>
 
 <section title="Deployment">
-<section title="Routers, DNS Servers">
+	<!--<section title="Routers, DNS Servers">-->
 <t>
 	PvD architecture assumes presence of at least one router which runs
-	modified version of <xref target="radvd">radvd daemon</xref>.
+	modified version of <xref target="radvd">radvd daemon</xref>, described
+	in <xref target="section-radvd"/>.
 	Through RA messages, router conveys network related parameters to client
 	host (prefix, routes, DNS servers and domains).
 	Router should also provide PvD properties, using an HTTP server on port 8080
@@ -356,14 +362,14 @@
 	DNS servers aren't part of PvD architecture but could be used to demonstrate
 	that different PvDs can use different DNS servers.
 </t>
-</section>
-<section title="PvD-manager, Client Applications">
+<!--</section>
+<section title="PvD-manager, Client Applications">-->
 <t>
 	PvD-manager is a daemon for client host. Currently PvD-manager consists of
 	several modules. Main module maintain PvD information, creates, updates and
 	deletes namespaces. NDP module listens for RA messages, parse them and forward
 	them to main module. API server module listens for client application
-	requests (using d-bus) and responds to them, but also send signals to clients
+	requests (using d-bus) and responds to them, and also send signals to clients
 	when a change occurred in PvDs.
 </t>
 <t>
@@ -380,7 +386,7 @@
 	PvD. Otherwise, such application will behave as PvDs weren't present
 	("as usual").
 </t>
-</section>
+<!--</section>-->
 </section>
 
 <section title="Implementation Details">
@@ -408,13 +414,13 @@
 	Implemented interface include PvD retrieval methods
 	(pvd_get_by_id, pvd_get_by_properties), PvD selection (pvd_activate) and
 	registration for events when PvDs change (pvd_register_signal).
-	Sample test applications are created, which
-	demonstrate API usage and PvD system possibilities.
+	Sample test applications which
+	demonstrate API usage and PvD system possibilities are provided in repository.
 </t>
 
 <t>
-	PvD-manager is implemented in Python 3 for rapid prototyping and availability
-	of network managing modules (mainly pyroute2 and netaddr).
+	PvD-manager is implemented in Python 3 because it allows rapid prototyping
+	using network managing modules (mainly pyroute2 and netaddr).
 </t>
 
 
@@ -424,7 +430,7 @@
 </t>
 </section>
 
-<section title="Test Scenarios">
+<section title="Test Scenarios" anchor="test-scenarios">
 
 <t>
 	Test scenarios used for validating implementations include a system with
@@ -469,10 +475,10 @@
 <t>
 	VPN was simulated by a tunnel between Client and S2, created within
 	implicit PvD provided by R2. Then tunnel was added as another PvD.
-	S2 for this scenario had local address (and prefix)as local addresses
+	S2 for this scenario had local address (and prefix) as local addresses
 	on R2 network: there were two PvDs with same prefix on Client.
 	However, client applications running in those two different PvDs for the
-	same local IP address (fd02::1) connected with different servers: one with
+	same IP address (fd02::1) connected with different servers: one with
 	R2, and another (which used "VPN" PvD) with S2.
 </t>
 <t>
@@ -483,27 +489,78 @@
 	PvD availability from PvD-manager and chose again among active PvDs.
 </t>
 <t>
-	More details for described scenarios and some other
+	More details for described scenarios (and some other)
 	are provided in <xref target="PvD-manager">demonstration test cases
 	</xref>.
 </t>
-
-
-
 </section>
 
-      <section title="Experiences gained">
+<section title="Experiences gained">
+<t>
+	Present some experience gained from the implementation. What
+	do you think was good? What would you do differently if you
+	were to implement this again. What about language/environment,
+	was it good, what was bad?
+</t>
+<section title="Linux namespaces">
+<t>
+	Using Linux namespaces still seems best option for PvD realization despite
+	its drawbacks. Its isolation and ease of use from PvD-manager and
+	client application perspective can hardly be outmatched with other solutions.
+	Besides already mentioned need for separate IP address per
+	namespace, there are several more issues with namespaces.
+</t>
+<t>
+	Managing namespaces (creation, deletion, modification) requires root
+	privileges (as expected). However, even switching an application from one
+	namespace to another is possible only if application has root privileges.
+	This currently limits this namespace approach to only applications run by
+	root. For lifting this limitation, changes in Linux kernel and namespace
+	handling is required. Some sort of permission system should also be applied to
+	namespaces (e.g. similarly with permissions on files and system objects).
+</t>
+<t>
+	Switching namespace from within the application with setns doesn't update DNS
+	related configuration as expected. When an application is started with commands
+	"ip netns exec &lt;namespace-name&gt; &lt;application&gt; [arguments]",
+	DNS configuration is updated (/etc/resolf.conf is the one from
+	/etc/netns/&lt;namespace-name&gt;/). However, setns doesn't replicate that
+	behavior, and that manipulations should be done separately (mounting certain
+	directories/files).
+</t>
+<t>
+	When a namespace is created, a virtual device is created that is linked
+	with physical device (and it gets assigned its own MAC address). However, if
+	on particular physical device can't be linked virtual one (like VPN), then
+	either physical device must be moved to certain PvD or some sort of bridge
+	created and devices attached to that bridge that can be moved to namespace.
+	Sometimes, it's better to move physical device to particular namespace (PvD)
+	and allow only some applications its usage (e.g. like VPN).
+</t>
+<t>
+	Managing namespace: creating, deleting, adding device to it, adding ip address
+	and routes are operations performed within PvD-manager and they aren't instant.
+	Maybe that is expected and "normal" since such operations aren't to be
+	performed frequently (only when something in network changes). However, when
+	testing frequent changes in PvDs (routers were connected and disconnected)
+	significant delay in PvD aware application was detected. Sometimes PvD-manager's
+	API server module (that is responsible for client communication) become
+	unresponsive for at least several seconds. This could be a bug in PvD-manager
+	or result of changes PvD-manager sent being applied by Linux kernel.
+</t>
+<t>
+	Recently added feature of Linux kernel, named
+	<eref target="https://www.kernel.org/doc/Documentation/networking/vrf.txt">
+	Virtual Routing and Forwarding (VRF)</eref>
+	(core IPv4 support is in v4.3 and core IPv6 support is in v4.4.), seems
+	possible alternative to namespaces. However, it should be investigate further
+	to create some conclusions.
+</t>
 
-        <t>
-        Present some experience gained from the implementation. What
-        do you think was good? What would you do differently if you
-        were to implement this again. What about language/environment,
-        was it good, what was bad?
-        </t>
+</section>
+</section>
 
-      </section>
-
-    </section>
+</section>
 
     <section title="NetworkManager implementation">
 
@@ -513,7 +570,7 @@
 
     </section>
 
-    <section title="Server component">
+    <section title="Server component" anchor="section-radvd">
 
       <t>
       Write about changes in the radvd component.
