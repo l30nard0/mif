@@ -10,7 +10,7 @@ Expires: September 6, 2016                          University of Zagreb
 
 
                An implementation of PvD support in Linux
-               draft-sgros-dhcp-and-ipr-claim-analysis-00
+        draft-sgros-an-implementation-of-PvD-support-in-Linux-00
 
 Abstract
 
@@ -527,10 +527,10 @@ Internet-Draft  An implementation of PvD support in Linux     March 2016
    PvD-manager or result of changes PvD-manager sent being applied by
    Linux kernel.
 
-   Recently added feature of Linux kernel, named Virtual Routing and
-   Forwarding (VRF) [1] (core IPv4 support is in v4.3 and core IPv6
-   support is in v4.4.), seems possible alternative to namespaces.
-   However, it should be investigate further to create some conclusions.
+   Recently added feature of Linux kernel (January, 2016), named Virtual
+   Routing and Forwarding (VRF) [1], seems possible alternative to
+   namespaces.  However, it should be investigate further to create some
+   conclusions.
 
 3.  NetworkManager implementation
 

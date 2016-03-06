@@ -1,4 +1,4 @@
-NAME = draft-implementation-of-PvD-support
+NAME = draft-sgros-an-implementation-of-PvD-support-in-Linux-00
 SRC := $(NAME).xml
 DEST := $(NAME).txt
 

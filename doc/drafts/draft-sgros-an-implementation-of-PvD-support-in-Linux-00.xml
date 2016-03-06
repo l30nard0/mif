@@ -42,7 +42,7 @@
 <?rfc subcompact="no" ?>
 <!-- keep one blank line between list items -->
 <!-- end of list of popular I-D processing instructions -->
-<rfc category="info" docName="draft-sgros-dhcp-and-ipr-claim-analysis-00" ipr="trust200902">
+<rfc category="info" docName="draft-sgros-an-implementation-of-PvD-support-in-Linux-00">
   <!-- category values: std, bcp, info, exp, and historic
      ipr values: full3667, noModification3667, noDerivatives3667
      you can add the attributes updates="NNNN" and obsoletes="NNNN"
@@ -549,10 +549,9 @@ From R2:
 	or result of changes PvD-manager sent being applied by Linux kernel.
 </t>
 <t>
-	Recently added feature of Linux kernel, named
+	Recently added feature of Linux kernel (January, 2016), named
 	<eref target="https://www.kernel.org/doc/Documentation/networking/vrf.txt">
-	Virtual Routing and Forwarding (VRF)</eref>
-	(core IPv4 support is in v4.3 and core IPv6 support is in v4.4.), seems
+	Virtual Routing and Forwarding (VRF)</eref>, seems
 	possible alternative to namespaces. However, it should be investigate further
 	to create some conclusions.
 </t>
